@@ -9,8 +9,7 @@ from tqdm import tqdm
 # p: The percentage size of train data compared to the whold data
 def model_arima(data, nodes=29, l=24, r = 0.8, h = 3, p = 0.6):
 
-    test_size = data.shape[0]-int(data.shape[0]*p)
-    bm = binary_matrix(r, len(LOAD_AREAS), test_size)
+    bm = binary_matrix(r, len(LOAD_AREAS), data.shape[0])
 
     # run predict for 29 nodes
     for load_area in LOAD_AREAS:
@@ -21,7 +20,7 @@ def model_arima(data, nodes=29, l=24, r = 0.8, h = 3, p = 0.6):
         history = [x for x in train]
         predictions = list()
         gt = []
-        for t in tqdm(range(len(train) - l - h)):
+        for t in range(len(train) - l - h):
 
             # Only use l time-steps as inputs
             model = pm.auto_arima(history[-l:], error_action = 'ignore', seasonal = True, m = l)
@@ -30,7 +29,7 @@ def model_arima(data, nodes=29, l=24, r = 0.8, h = 3, p = 0.6):
             predictions.append(yhat)
             gt.append(test[t:t+h])
             for i in range(h):
-                if bm[LOAD_AREAS.index(load_area)][t+size + i] == 1:
+                if bm[(t+size + i), LOAD_AREAS.index(load_area)] == 1:
                     # Update the data if verified == True
                     history.append(test[t+i])
                 else:
