@@ -91,12 +91,13 @@ The hourly load estimated dataset is divided into three subsets for training, va
 - Prepare training data for LSTM encoder-decoder
 dataX(-1, l, 1), dataY(-1,h,1)*
 Randomly create binary matrix <img src="/tex/bcd07b807305a9d37467c1be1af88cb4.svg?invert_in_darkmode&sanitize=true" align=middle width=44.068071299999986pt height=22.465723500000017pt/>
-*For k = 0 <img src="/tex/e49c6dac8af82421dba6bed976a80bd9.svg?invert_in_darkmode&sanitize=true" align=middle width=16.43840384999999pt height=14.15524440000002pt/> K:*
-&nbsp;&nbsp;&nbsp;&nbsp;	*For i = 0 <img src="/tex/e49c6dac8af82421dba6bed976a80bd9.svg?invert_in_darkmode&sanitize=true" align=middle width=16.43840384999999pt height=14.15524440000002pt/> T - l - h:*
+
+*For k = 0 -> K:*
+*For i = 0 -> T - l - h:*
 	1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = (<img src="/tex/ea299e74f36b5d8ce3990a6d19d343a2.svg?invert_in_darkmode&sanitize=true" align=middle width=74.15442044999999pt height=27.91243950000002pt/>), y = (<img src="/tex/99e38df654a1a29749584d02dc97e411.svg?invert_in_darkmode&sanitize=true" align=middle width=120.28571609999997pt height=27.91243950000002pt/>)*
 	2. If <img src="/tex/96caff1dc9392f9777c86aa50a855b4d.svg?invert_in_darkmode&sanitize=true" align=middle width=290.04922815000003pt height=27.91243950000002pt/> 
 	3. dataX.append(x); dataY.append(y) 
-<br/>
+
 - Prepare training data for DCRNN
 In the training phase, training data needs to be prepared as follows
 *dataX(-1, l, K, 1), dataY(-1, h, K, 1)*
