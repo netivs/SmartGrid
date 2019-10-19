@@ -1,6 +1,6 @@
-from sklearn.metrics import mean_squared_error
 import numpy as np
-import random
+from sklearn.metrics import mean_squared_error
+
 
 def cal_error(test_arr, prediction_arr):
     # cal mse
@@ -13,13 +13,14 @@ def cal_error(test_arr, prediction_arr):
     print('Test RMSE: %.3f' % error_rmse)
 
     # cal mape
-    y_true, y_pred  = np.array(test_arr), np.array(prediction_arr)
+    y_true, y_pred = np.array(test_arr), np.array(prediction_arr)
     error_mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
     print('Test MAPE: %.3f' % error_mape)
 
-def binary_matrix(r, row, col):
-    tf = np.array([1,0])
 
-    bm = np.random.choice(tf, size=(col, row), p=[r, 1.0-r])
+def binary_matrix(r, row, col):
+    tf = np.array([1, 0])
+
+    bm = np.random.choice(tf, size=(col, row), p=[r, 1.0 - r])
 
     return bm
