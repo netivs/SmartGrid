@@ -94,7 +94,7 @@ The hourly load estimated dataset is divided into three subsets for training, va
 
 ### Model Training <a name="model_training"></a>
 - Prepare training data for LSTM encoder-decoder
-dataX(-1, l, 1), dataY(-1,h,1)*
+dataX(-1, l, 1), dataY(-1,h,1)
 Randomly create binary matrix $M_{T*K}$
 
 *For k = 0 -> K:*
