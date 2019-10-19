@@ -96,12 +96,13 @@ The hourly load estimated dataset is divided into three subsets for training, va
 - Prepare training data for LSTM encoder-decoder
 dataX(-1, l, 1), dataY(-1,h,1)*
 Randomly create binary matrix $M_{T*K}$
-*For k = 0 $\to$ K:*
-&nbsp;&nbsp;&nbsp;&nbsp;	*For i = 0 $\to$ T - l - h:*
+
+*For k = 0 -> K:*
+*For i = 0 -> T - l - h:*
 	1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = ($x_i^k,...,x_{i+l}^k$), y = ($x_{i+l+1}^k,...,x_{i+l+h}^k$)*
 	2. If $m_i^k = 0: x_i^k \to random(x_i^k - x'; x_i^k + x')$ 
 	3. dataX.append(x); dataY.append(y) 
-<br/>
+
 - Prepare training data for DCRNN
 In the training phase, training data needs to be prepared as follows
 *dataX(-1, l, K, 1), dataY(-1, h, K, 1)*
