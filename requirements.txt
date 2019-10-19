@@ -4,3 +4,4 @@ pmdarima
 sklearn
 matplotlib
 numpy
+keras
