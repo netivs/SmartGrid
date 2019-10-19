@@ -1,11 +1,3 @@
-
-
-
-
-
-
-
-
 # Deep Learning-based Electric Load Prediction with Partial Information for Smart Grids
 
 Author
@@ -75,7 +67,7 @@ Where:
 - l: the number of historical time-steps used for prediction
 
 ***Output*** <a name="output"></a>
-$$\hat{x}_{t+1}^k, \hat{x}_{t+1}^k,..., \hat{x}_{t+1}^k = \argmax_{{x}_{t+1}^k, {x}_{t+2}^k,..., {x}_{t+h}^k} p({x}_{t+1}^k, {x}_{t+2}^k,..., {x}_{t+h}^k \vee {x}_{t-l+1}^k, {x}_{t-l+2}^k,..., {x}_{t}^k)$$
+$$\hat{x}_{t+1}^k, \hat{x}_{t+1}^k,..., \hat{x}_{t+1}^k = arg\max_{{x}_{t+1}^k, {x}_{t+2}^k,..., {x}_{t+h}^k} p({x}_{t+1}^k, {x}_{t+2}^k,..., {x}_{t+h}^k \vee {x}_{t-l+1}^k, {x}_{t-l+2}^k,..., {x}_{t}^k)$$
 Where:
 - h: the number of time-steps need to be predicted
 
@@ -94,30 +86,32 @@ The hourly load estimated dataset is divided into three subsets for training, va
 
 ### Model Training <a name="model_training"></a>
 - Prepare training data for LSTM encoder-decoder
-dataX(-1, l, 1), dataY(-1,h,1)
 
-Randomly create binary matrix $M_{T*K}$
+&nbsp;&nbsp;&nbsp;&nbsp;dataX(-1, l, 1), dataY(-1,h,1)
 
-*For k = 0 -> K:*
+&emsp;Randomly create binary matrix $M_{T*K}$
 
-&nbsp;&nbsp;&nbsp;&nbsp;;*For i = 0 -> T - l - h:*
+&emsp;*For k = 0 -> K:*
+
+&emsp;&emsp;*For i = 0 -> T - l - h:*
 
 1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = ($x_i^k,...,x_{i+l}^k$), y = ($x_{i+l+1}^k,...,x_{i+l+h}^k$)*
 2. If $m_i^k = 0: x_i^k \to random(x_i^k - x'; x_i^k + x')$ 
 3. dataX.append(x); dataY.append(y) 
 
 - Prepare training data for DCRNN
-In the training phase, training data needs to be prepared as follows
 
-*dataX(-1, l, K, 1), dataY(-1, h, K, 1)*
+&emsp;In the training phase, training data needs to be prepared as follows
 
-Randomly create binary matrix $M_{T*K}$
+&emsp;*dataX(-1, l, K, 1), dataY(-1, h, K, 1)*
 
-for i = 0 -> T - l - h: #T is the number of time-steps in the training set
+&emsp;Randomly create binary matrix $M_{T*K}$
+
+&emsp;for i = 0 -> T - l - h: #T is the number of time-steps in the training set
 
 4. Data need to be transformed as format: (x, y) where x is the input with shape *(l, K, 1)*, y is the target with shape *(h, K, 1)*
 
-5. Change the value $x_i^k$ whose $m_i^k = 0 as \to random(x_i^k - x'; x_i^k + x')$, where $x'$ is the stdev of the training set.
+5. Change the value $x_i^k$ whose $m_i^k = 0$ as $\to$ random$(x_i^k - x'; x_i^k + x')$, where $x'$ is the stdev of the training set.
 
 6. dataX.append(x); dataY.append(y)
  
