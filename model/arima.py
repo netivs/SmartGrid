@@ -1,5 +1,5 @@
 import numpy as np
-import pmdarima as pm
+from pmdarima.arima import auto_arima
 
 from utils.constant import LOAD_AREAS
 from utils.model import cal_error, binary_matrix
@@ -10,7 +10,7 @@ from utils.model import cal_error, binary_matrix
 # p: The percentage size of train data compared to the whold data
 
 
-def model_arima(data, nodes=29, l=24, r = 0.8, h = 3, p = 0.6):
+def model_arima(data, l=24, r=0.8, h=3, p=0.6):
 
     bm = binary_matrix(r, len(LOAD_AREAS), data.shape[0])
 
@@ -23,10 +23,11 @@ def model_arima(data, nodes=29, l=24, r = 0.8, h = 3, p = 0.6):
         history = [x for x in train]
         predictions = list()
         gt = []
+
         for t in range(len(train) - l - h):
 
             # Only use l time-steps as inputs
-            model = pm.auto_arima(history[-l:], error_action = 'ignore', seasonal = True, m = l)
+            model = auto_arima(np.array(history[-l:]), error_action='ignore')
             yhat = model.predict(n_periods = h)
             
             predictions.append(yhat)
