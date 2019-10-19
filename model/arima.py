@@ -3,12 +3,15 @@ from utils.constant import LOAD_AREAS
 from utils.model import cal_error, binary_matrix
 import matplotlib.pyplot as plt
 import numpy as np
-
+from tqdm import tqdm
 # l: The number of time-steps used for each prediction
 # h: The number of time-steps need to be predicted
 # p: The percentage size of train data compared to the whold data
-def model_arima(data, nodes, l, r = 0.8, h = 1, p = 0.6):
-    binary_matrix = binary_matrix(r, nodes, l)
+def model_arima(data, nodes=29, l=24, r = 0.8, h = 3, p = 0.6):
+
+    test_size = data.shape[0]-int(data.shape[0]*p)
+    bm = binary_matrix(r, len(LOAD_AREAS), test_size)
+
     # run predict for 29 nodes
     for load_area in LOAD_AREAS:
         series = data[[load_area]].squeeze('columns')
@@ -18,7 +21,7 @@ def model_arima(data, nodes, l, r = 0.8, h = 1, p = 0.6):
         history = [x for x in train]
         predictions = list()
         gt = []
-        for t in range(len(train) - l - h):
+        for t in tqdm(range(len(train) - l - h)):
 
             # Only use l time-steps as inputs
             model = pm.auto_arima(history[-l:], error_action = 'ignore', seasonal = True, m = l)
@@ -27,7 +30,7 @@ def model_arima(data, nodes, l, r = 0.8, h = 1, p = 0.6):
             predictions.append(yhat)
             gt.append(test[t:t+h])
             for i in range(h):
-                if binary_matrix[LOAD_AREAS.index(load_area)][t+size + i] == 1:
+                if bm[LOAD_AREAS.index(load_area)][t+size + i] == 1:
                     # Update the data if verified == True
                     history.append(test[t+i])
                 else:
@@ -41,6 +44,6 @@ def model_arima(data, nodes, l, r = 0.8, h = 1, p = 0.6):
         cal_error(gt.flatten(), predictions.flatten())
 
         # plot
-        plt.plot(test)
-        plt.plot(predictions, color='red')
-        plt.show()
+        # plt.plot(test)
+        # plt.plot(predictions, color='red')
+        # plt.show()

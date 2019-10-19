@@ -24,9 +24,6 @@ def binary_matrix(r, row, col):
     while (total/denominator <= r):
         rnd_row = random.randint(0, row-1)
         rnd_col = random.randint(0, col-1)
-        print(rnd_col)
-        print(rnd_row)
         arr[rnd_row][rnd_col] = 1
         total += 1
-    print (total, denominator)
     return arr
