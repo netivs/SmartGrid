@@ -1,12 +1,15 @@
+import numpy as np
 import pmdarima as pm
+
 from utils.constant import LOAD_AREAS
 from utils.model import cal_error, binary_matrix
-import matplotlib.pyplot as plt
-import numpy as np
-from tqdm import tqdm
+
+
 # l: The number of time-steps used for each prediction
 # h: The number of time-steps need to be predicted
 # p: The percentage size of train data compared to the whold data
+
+
 def model_arima(data, nodes=29, l=24, r = 0.8, h = 3, p = 0.6):
 
     bm = binary_matrix(r, len(LOAD_AREAS), data.shape[0])
