@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 # Deep Learning-based Electric Load Prediction with Partial Information for Smart Grids
 
 Author
@@ -48,26 +56,21 @@ In this study, we consider to estimate the load for each “load area” hourly 
 
 ### Problem Formulation <a name="problem_formulation"></a>
 
-Assume that there are K "load areas" in the grids. Let $x_t^k$ be the load value of area k (k = 1, K) at time-step t which t is considered as the current time-step. The problem is formulated as follows. 
+Assume that there are K "load areas" in the grids. Let <img src="/tex/7b5c69854bf1ba5aecb122c8ddd74fe2.svg?invert_in_darkmode&sanitize=true" align=middle width=16.66101689999999pt height=27.91243950000002pt/> be the load value of area k (k = 1, K) at time-step t which t is considered as the current time-step. The problem is formulated as follows. 
 
 ***Input*** <a name="input"></a>
 
-$$x_i^k = 
-\begin{cases}
-o_i^k,  & \text{if $m_i^k$ = 1} \\[2ex]
-x_i^k, & \text{if $m_i^k$ = 0}
-\end{cases}
-$$
-$$\forall k = 1, ..., K; i  = t - l +1, ..., t$$
+<p align="center"><img src="/tex/f57604b222188ab96f6eeb2d92ca0d21.svg?invert_in_darkmode&sanitize=true" align=middle width=162.0530703pt height=59.178683850000006pt/></p>
+<p align="center"><img src="/tex/1aca9d30370e93a90236a67f76837718.svg?invert_in_darkmode&sanitize=true" align=middle width=220.49139749999998pt height=14.611878599999999pt/></p>
 
 Where:
-- $x_i^k$: the predicted value of area k at time-step i.
-- $o_i^k$: the ground-truth (i.e. verified) value of area k at time-step i.
-- $m_i^k$: the binary variable indicates that the value will be updated/verified by users.
+- <img src="/tex/47145dd469cc1c3848c30ceccd72bf11.svg?invert_in_darkmode&sanitize=true" align=middle width=16.66101689999999pt height=27.91243950000002pt/>: the predicted value of area k at time-step i.
+- <img src="/tex/86c8a2f3dcf85e1aa0acc7d42b3af7d7.svg?invert_in_darkmode&sanitize=true" align=middle width=15.23408039999999pt height=27.91243950000002pt/>: the ground-truth (i.e. verified) value of area k at time-step i.
+- <img src="/tex/07cc3366c0ea9a5ed88b72396cedf0f6.svg?invert_in_darkmode&sanitize=true" align=middle width=21.69913019999999pt height=27.91243950000002pt/>: the binary variable indicates that the value will be updated/verified by users.
 - l: the number of historical time-steps used for prediction
 
 ***Output*** <a name="output"></a>
-$$\hat{x}_{t+1}^k, \hat{x}_{t+1}^k,..., \hat{x}_{t+1}^k = \argmax_{{x}_{t+1}^k, {x}_{t+2}^k,..., {x}_{t+h}^k} p({x}_{t+1}^k, {x}_{t+2}^k,..., {x}_{t+h}^k \vee {x}_{t-l+1}^k, {x}_{t-l+2}^k,..., {x}_{t}^k)$$
+<p align="center"><img src="/tex/b6eb9a605ce826ff063fe2adf38cf562.svg?invert_in_darkmode&sanitize=true" align=middle width=576.62790735pt height=24.13698375pt/></p>
 Where:
 - h: the number of time-steps need to be predicted
 
@@ -87,23 +90,23 @@ The hourly load estimated dataset is divided into three subsets for training, va
 ### Model Training <a name="model_training"></a>
 - Prepare training data for LSTM encoder-decoder
 dataX(-1, l, 1), dataY(-1,h,1)*
-Randomly create binary matrix $M_{T*K}$
-*For k = 0 $\to$ K:*
-&nbsp;&nbsp;&nbsp;&nbsp;	*For i = 0 $\to$ T - l - h:*
-	1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = ($x_i^k,...,x_{i+l}^k$), y = ($x_{i+l+1}^k,...,x_{i+l+h}^k$)*
-	2. If $m_i^k = 0: x_i^k \to random(x_i^k - x'; x_i^k + x')$ 
+Randomly create binary matrix <img src="/tex/bcd07b807305a9d37467c1be1af88cb4.svg?invert_in_darkmode&sanitize=true" align=middle width=44.068071299999986pt height=22.465723500000017pt/>
+*For k = 0 <img src="/tex/e49c6dac8af82421dba6bed976a80bd9.svg?invert_in_darkmode&sanitize=true" align=middle width=16.43840384999999pt height=14.15524440000002pt/> K:*
+&nbsp;&nbsp;&nbsp;&nbsp;	*For i = 0 <img src="/tex/e49c6dac8af82421dba6bed976a80bd9.svg?invert_in_darkmode&sanitize=true" align=middle width=16.43840384999999pt height=14.15524440000002pt/> T - l - h:*
+	1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = (<img src="/tex/ea299e74f36b5d8ce3990a6d19d343a2.svg?invert_in_darkmode&sanitize=true" align=middle width=74.15442044999999pt height=27.91243950000002pt/>), y = (<img src="/tex/99e38df654a1a29749584d02dc97e411.svg?invert_in_darkmode&sanitize=true" align=middle width=120.28571609999997pt height=27.91243950000002pt/>)*
+	2. If <img src="/tex/96caff1dc9392f9777c86aa50a855b4d.svg?invert_in_darkmode&sanitize=true" align=middle width=290.04922815000003pt height=27.91243950000002pt/> 
 	3. dataX.append(x); dataY.append(y) 
 <br/>
 - Prepare training data for DCRNN
 In the training phase, training data needs to be prepared as follows
 *dataX(-1, l, K, 1), dataY(-1, h, K, 1)*
-Randomly create binary matrix $M_{T*K}$
-for i = 0 $\to$ T - l - h: #T is the number of time-steps in the training set
+Randomly create binary matrix <img src="/tex/bcd07b807305a9d37467c1be1af88cb4.svg?invert_in_darkmode&sanitize=true" align=middle width=44.068071299999986pt height=22.465723500000017pt/>
+for i = 0 <img src="/tex/e49c6dac8af82421dba6bed976a80bd9.svg?invert_in_darkmode&sanitize=true" align=middle width=16.43840384999999pt height=14.15524440000002pt/> T - l - h: #T is the number of time-steps in the training set
 	4. Data need to be transformed as format: (x, y) where x is the input with shape *(l, K, 1)*, y is the target with shape *(h, K, 1)*
-	5. Change the value $x_i^k$ whose $m_i^k = 0 as \to random(x_i^k - x'; x_i^k + x')$, where $x'$ is the stdev of the training set.
+	5. Change the value <img src="/tex/47145dd469cc1c3848c30ceccd72bf11.svg?invert_in_darkmode&sanitize=true" align=middle width=16.66101689999999pt height=27.91243950000002pt/> whose <img src="/tex/4c2e705ad9c24c40a46133b9304edf1b.svg?invert_in_darkmode&sanitize=true" align=middle width=275.2625073pt height=27.91243950000002pt/>, where <img src="/tex/aca94dc4280088e4b15ee4be41751fd0.svg?invert_in_darkmode&sanitize=true" align=middle width=13.18495034999999pt height=24.7161288pt/> is the stdev of the training set.
 	6. dataX.append(x); dataY.append(y)
  
-### Evaluation's Metrices <a name="evaluation_metrices"></a>
+### Evaluation's Metrices <a name="evaluation_metric"></a>
 1. MAE
 2. RMSE
 3. MAPE
