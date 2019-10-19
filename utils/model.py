@@ -1,15 +1,15 @@
 import numpy as np
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
 def cal_error(test_arr, prediction_arr):
     # cal mse
-    error_mse = mean_squared_error(test_arr, prediction_arr)
-    print('Test MSE: %.3f' % error_mse)
+    error_mae = mean_absolute_error(test_arr, prediction_arr)
+    print('Test MAE: %.3f' % error_mae)
 
     # cal rmse
-    n = len(prediction_arr)
-    error_rmse = np.linalg.norm(prediction_arr - test_arr) / np.sqrt(n)
+    error_mse = mean_squared_error(test_arr, prediction_arr)
+    error_rmse = np.sqrt(error_mse)
     print('Test RMSE: %.3f' % error_rmse)
 
     # cal mape
@@ -19,20 +19,6 @@ def cal_error(test_arr, prediction_arr):
 
 
 def binary_matrix(r, row, col):
-<<<<<<< HEAD
     tf = np.array([1, 0])
-
     bm = np.random.choice(tf, size=(col, row), p=[r, 1.0 - r])
-
     return bm
-=======
-    arr = np.zeros((row, col))
-    total = 1
-    denominator = row * col
-    while (total/denominator <= r):
-        rnd_row = random.randint(0, row-1)
-        rnd_col = random.randint(0, col-1)
-        arr[rnd_row][rnd_col] = 1
-        total += 1
-    return arr
->>>>>>> origin/master

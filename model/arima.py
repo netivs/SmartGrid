@@ -29,7 +29,7 @@ def model_arima(data, l=24, r=0.8, h=3, p=0.6):
         predictions = list()
         gt = []
 
-        for t in range(len(train) - l - h):
+        for t in range(len(test) - h + 1):
 
             # Only use l time-steps as inputs
             model = auto_arima(np.array(history[-l:]), error_action='ignore')
@@ -37,7 +37,7 @@ def model_arima(data, l=24, r=0.8, h=3, p=0.6):
             predictions.append(yhat)
             gt.append(test[t:t+h])
             for i in range(h):
-                if bm[(t+size + i), LOAD_AREAS.index(load_area)] == 1:
+                if bm[(t+ h + i), LOAD_AREAS.index(load_area)] == 1:
                     # Update the data if verified == True
                     history.append(test[t+i])
                 else:
