@@ -95,22 +95,31 @@ The hourly load estimated dataset is divided into three subsets for training, va
 ### Model Training <a name="model_training"></a>
 - Prepare training data for LSTM encoder-decoder
 dataX(-1, l, 1), dataY(-1,h,1)
+
 Randomly create binary matrix $M_{T*K}$
 
 *For k = 0 -> K:*
-*For i = 0 -> T - l - h:*
-	1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = ($x_i^k,...,x_{i+l}^k$), y = ($x_{i+l+1}^k,...,x_{i+l+h}^k$)*
-	2. If $m_i^k = 0: x_i^k \to random(x_i^k - x'; x_i^k + x')$ 
-	3. dataX.append(x); dataY.append(y) 
+
+&nbsp;&nbsp;&nbsp;&nbsp;;*For i = 0 -> T - l - h:*
+
+1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = ($x_i^k,...,x_{i+l}^k$), y = ($x_{i+l+1}^k,...,x_{i+l+h}^k$)*
+2. If $m_i^k = 0: x_i^k \to random(x_i^k - x'; x_i^k + x')$ 
+3. dataX.append(x); dataY.append(y) 
 
 - Prepare training data for DCRNN
 In the training phase, training data needs to be prepared as follows
+
 *dataX(-1, l, K, 1), dataY(-1, h, K, 1)*
+
 Randomly create binary matrix $M_{T*K}$
-for i = 0 $\to$ T - l - h: #T is the number of time-steps in the training set
-	4. Data need to be transformed as format: (x, y) where x is the input with shape *(l, K, 1)*, y is the target with shape *(h, K, 1)*
-	5. Change the value $x_i^k$ whose $m_i^k = 0 as \to random(x_i^k - x'; x_i^k + x')$, where $x'$ is the stdev of the training set.
-	6. dataX.append(x); dataY.append(y)
+
+for i = 0 -> T - l - h: #T is the number of time-steps in the training set
+
+4. Data need to be transformed as format: (x, y) where x is the input with shape *(l, K, 1)*, y is the target with shape *(h, K, 1)*
+
+5. Change the value $x_i^k$ whose $m_i^k = 0 as \to random(x_i^k - x'; x_i^k + x')$, where $x'$ is the stdev of the training set.
+
+6. dataX.append(x); dataY.append(y)
  
 ### Evaluation's Metrices <a name="evaluation_metric"></a>
 1. MAE
