@@ -19,8 +19,20 @@ def cal_error(test_arr, prediction_arr):
 
 
 def binary_matrix(r, row, col):
+<<<<<<< HEAD
     tf = np.array([1, 0])
 
     bm = np.random.choice(tf, size=(col, row), p=[r, 1.0 - r])
 
     return bm
+=======
+    arr = np.zeros((row, col))
+    total = 1
+    denominator = row * col
+    while (total/denominator <= r):
+        rnd_row = random.randint(0, row-1)
+        rnd_col = random.randint(0, col-1)
+        arr[rnd_row][rnd_col] = 1
+        total += 1
+    return arr
+>>>>>>> origin/master
