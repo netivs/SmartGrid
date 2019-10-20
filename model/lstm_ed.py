@@ -26,4 +26,7 @@ def prepare_data(data, l=24, r=0.8, h=1, p=0.6):
 
             X.append(x_input)
             Y.append(y_input)
+    
+    X = np.stack(X, axis=0)
+    Y = np.stack(Y, axis=0)
     return X, Y
