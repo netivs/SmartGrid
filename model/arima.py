@@ -10,7 +10,7 @@ from utils.model import cal_error, binary_matrix, cal_error_all_load_areas
 # p: The percentage size of train data compared to the whold data
 
 
-def model_arima(data, l=24, r=0.8, h=3, p=0.6):
+def model_arima(data, l=24, r=0.8, h=3, p =0.6):
     # this list contains tuple {'name_of_load_area', 'gt list', 'prediction list'} to get all metrics of all load_ares
     metrics_all_load_area = []
 
