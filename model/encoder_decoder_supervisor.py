@@ -1,15 +1,14 @@
-import os
-import time
-
 import keras.callbacks as keras_callbacks
 import numpy as np
+import os
 import pandas as pd
+import time
 import yaml
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import LSTM, Dense, Input
 from keras.models import Model
 from keras.utils import plot_model
 from tqdm import tqdm
-from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from utils import utils
 
@@ -43,9 +42,6 @@ class EncoderDecoder():
         self._logger = utils.get_logger(self._log_dir, __name__, 'info.log', level=log_level)
         self._logger.info(kwargs)
 
-        # Data's args
-        self._day_size = self._data_kwargs.get('day_size')
-
         # Model's Args
         self._model_type = self._model_kwargs.get('model_type')
         self._rnn_units = self._model_kwargs.get('rnn_units')
@@ -64,22 +60,11 @@ class EncoderDecoder():
 
         # Test's args
         self._run_times = self._test_kwargs.get('run_times')
-        self._flow_selection = self._test_kwargs.get('flow_selection')
-        self._test_size = self._test_kwargs.get('test_size')
-        self._results_path = self._test_kwargs.get('results_path')
-
-        self._mon_ratio = self._kwargs.get('mon_ratio')
 
         # Load data
-        if self._model_type == 'lstm':
-            self._data = utils.load_dataset_lstm(seq_len=self._seq_len, horizon=self._horizon,
-                                                 input_dim=self._input_dim,
-                                                 mon_ratio=self._mon_ratio, test_size=self._test_size,
-                                                 **self._data_kwargs)
-        elif self._model_type == 'ed' or self._model_type == 'encoder_decoder':
+        if self._model_type == 'ed' or self._model_type == 'encoder_decoder':
             self._data = utils.load_dataset_lstm_ed(seq_len=self._seq_len, horizon=self._horizon,
                                                     input_dim=self._input_dim,
-                                                    mon_ratio=self._mon_ratio, test_size=self._test_size,
                                                     **self._data_kwargs)
         else:
             raise RuntimeError("Model must be lstm or encoder_decoder")
@@ -107,21 +92,17 @@ class EncoderDecoder():
         log_dir = kwargs['train'].get('log_dir')
         if log_dir is None:
             batch_size = kwargs['data'].get('batch_size')
-            learning_rate = kwargs['train'].get('base_lr')
-            max_diffusion_step = kwargs['model'].get('max_diffusion_step')
             n_rnn_layers = kwargs['model'].get('n_rnn_layers')
             rnn_units = kwargs['model'].get('rnn_units')
             structure = '-'.join(
                 ['%d' % rnn_units for _ in range(n_rnn_layers)])
             horizon = kwargs['model'].get('horizon')
 
-            mon_ratio = kwargs['mon_ratio']
-
             model_type = kwargs['model'].get('model_type')
 
-            run_id = '%s_%g_%d_%s_%g_%d/' % (
-                model_type, mon_ratio, horizon,
-                structure, learning_rate, batch_size)
+            run_id = '%s_%d_%s_%d/' % (
+                model_type, horizon,
+                structure, batch_size)
             base_dir = kwargs.get('base_dir')
             log_dir = os.path.join(base_dir, run_id)
         if not os.path.exists(log_dir):
