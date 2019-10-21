@@ -33,7 +33,6 @@ class EncoderDecoder():
         self._train_kwargs = kwargs.get('train')
         self._test_kwargs = kwargs.get('test')
         self._model_kwargs = kwargs.get('model')
-
         self._alg_name = self._kwargs.get('alg')
 
         # logging.
