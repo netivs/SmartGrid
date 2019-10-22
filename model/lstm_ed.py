@@ -1,5 +1,5 @@
 from sklearn import preprocessing
-from utils.model import binary_matrix
+from utils.utils import binary_matrix
 import random
 import numpy as np
 from numpy import array
@@ -8,7 +8,7 @@ from utils.constant import LOAD_AREAS
 def prepare_data(data, l=24, r=0.8, h=1, p=0.6):
     bm = binary_matrix(r, len(LOAD_AREAS), data.shape[0])
     X, Y = list(), list()
-    
+
     for load_area in LOAD_AREAS:
         data_load_area = data[[load_area]]
         T = int(len(data_load_area) * p)
@@ -24,6 +24,6 @@ def prepare_data(data, l=24, r=0.8, h=1, p=0.6):
                     tmp = x_input[row]
                     x_input[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
 
-            X.append(x_input)
-            Y.append(y_input)
+        X.append(x_input)
+        Y.append(y_input)
     return X, Y
