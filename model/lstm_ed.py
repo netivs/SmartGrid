@@ -24,14 +24,9 @@ def prepare_data(data, l=24, r=0.8, h=1, p=0.6):
                     tmp = x_input[row]
                     x_input[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
 
-<<<<<<< HEAD
             X.append(x_input)
             Y.append(y_input)
     
     X = np.stack(X, axis=0)
     Y = np.stack(Y, axis=0)
-=======
-        X.append(x_input)
-        Y.append(y_input)
->>>>>>> 5187077e34a1861fdd61bb5b54dd6fad764b5e2a
     return X, Y
