@@ -59,7 +59,7 @@ def create_data_lstm_ed(data, seq_len, r, input_dim=1, horizon=1):
     bm = binary_matrix(r, K, T)
     e_x, d_x, d_y = list(), list(), list()
     for col in range(K):
-        data_load_area = data[:, 0]
+        data_load_area = data[:, col]
         # x' - standard deviation for the training set
         x_stdev = np.std(data_load_area)
         for i in range (T - seq_len - horizon):
@@ -71,13 +71,19 @@ def create_data_lstm_ed(data, seq_len, r, input_dim=1, horizon=1):
                     tmp = x_en[row]
                     x_en[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
 
+            for row in range(len(x_de)):
+                if bm[row+i+seq_len-1][col] == 1:
+                    tmp = x_de[row]
+                    x_de[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
+
+            for row in range(len(y_de)):
+                if bm[row+i+seq_len][col] == 1:
+                    tmp = y_de[row]
+                    y_de[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
+
             x_en = x_en.reshape(seq_len, input_dim)
             x_de = x_de.reshape(horizon, input_dim)
             y_de = y_de.reshape(horizon, input_dim)
-            print('~~~~~~~~~~~~~~~~~~~~~~~')
-            print(x_en.shape)
-            print(x_de.shape)
-            print(y_de.shape)
             e_x.append(x_en)
             d_x.append(x_de)
             d_y.append(y_de)
