@@ -48,11 +48,11 @@ In this study, we consider to estimate the load for each “load area” hourly 
 
 ### Problem Formulation <a name="problem_formulation"></a>
 
-Assume that there are K "load areas" in the grids. Let $x_t^k$ be the load value of area k (k = 1, K) at time-step t which t is considered as the current time-step. The problem is formulated as follows. 
+Assume that there are K "load areas" in the grids. Let $x_t^k$ be the load value of area k (k = 1, K) at time-step t which t is considered as the current time-step. The problem is formulated as follows.
 
 ***Input*** <a name="input"></a>
 
-$$x_i^k = 
+$$x_i^k =
 \begin{cases}
 o_i^k,  & \text{if $m_i^k$ = 1} \\[2ex]
 x_i^k, & \text{if $m_i^k$ = 0}
@@ -87,7 +87,7 @@ The hourly load estimated dataset is divided into three subsets for training, va
 ### Model Training <a name="model_training"></a>
 - Prepare training data for LSTM encoder-decoder
 
-&nbsp;&nbsp;&nbsp;&nbsp;dataX(-1, l, 1), dataY(-1,h,1)
+&nbsp;&nbsp;&nbsp;&nbsp;*e_x(-1, l, 1), d_x(-1,h,1), d_y(-1,h,1)*
 
 &emsp;Randomly create binary matrix $M_{T*K}$
 
@@ -95,9 +95,16 @@ The hourly load estimated dataset is divided into three subsets for training, va
 
 &emsp;&emsp;*For i = 0 -> T - l - h:*
 
-1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = ($x_i^k,...,x_{i+l}^k$), y = ($x_{i+l+1}^k,...,x_{i+l+h}^k$)*
-2. If $m_i^k = 0: x_i^k \to random(x_i^k - x'; x_i^k + x')$ 
-3. dataX.append(x); dataY.append(y) 
+1. Data need to be transformed as format: $$(e_x, d_x, d_y)$$ where $e_x$ is the input with shape *(l, 1)*, $e_y$ is the target with shape *(h,1)*.
+
+	$$
+	e_x = (x_i^k,...,x_{i+l-1}^k),
+	d_x = (x_{i+l-1}^k,...,x_{i+l+h-2}^k),
+	d_y = (x_{i+l}^k,...,x_{i+l+h-1}^k)
+	$$
+
+2. If $m_i^k = 0: x_i^k \to random(x_i^k - x'; x_i^k + x')$
+3. e_x.append($e_x$); d_x.append($d_x$); d_y.append($d_y$)
 
 - Prepare training data for DCRNN
 
@@ -109,12 +116,12 @@ The hourly load estimated dataset is divided into three subsets for training, va
 
 &emsp;for i = 0 -> T - l - h: #T is the number of time-steps in the training set
 
-4. Data need to be transformed as format: (x, y) where x is the input with shape *(l, K, 1)*, y is the target with shape *(h, K, 1)*
+1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, K, 1)*, y is the target with shape *(h, K, 1)*
 
-5. Change the value $x_i^k$ whose $m_i^k = 0$ as $\to$ random$(x_i^k - x'; x_i^k + x')$, where $x'$ is the stdev of the training set.
+2. Change the value $x_i^k$ whose $m_i^k = 0$ as $\to$ random$(x_i^k - x'; x_i^k + x')$, where $x'$ is the stdev of the training set.
 
-6. dataX.append(x); dataY.append(y)
- 
+3. dataX.append(x); dataY.append(y)
+
 ### Evaluation's Metrices <a name="evaluation_metric"></a>
 1. MAE
 2. RMSE

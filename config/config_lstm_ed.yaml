@@ -1,27 +1,25 @@
 ---
 alg: LSTM
-base_dir: logs/pretrained/Abilene
+base_dir: log
 log_level: INFO
 gpu: 0
-mon_ratio: 0.3
 data:
   batch_size: 512
-  raw_dataset_dir: Dataset/Abilene2d.npy
-  val_batch_size: 1
+  raw_dataset_dir: data/data_load_area.npz
   eval_batch_size: 1
   test_batch_size: 1
-  data_name: Abilene
-  day_size: 288
-  data_size: 1.0
+  data_name: DataLoadArea
+  len_data: 0.6
 model:
   model_type: ed
-  horizon: 1
-  input_dim: 2
+  seq_len: 24
+  horizon: 2
+  input_dim: 1
+  verified_percentage: 0.8
   l1_decay: 0
   num_nodes: 144
   output_dim: 1
   rnn_units: 64
-  seq_len: 36
   n_rnn_layers: 2
 train:
   dropout: 0

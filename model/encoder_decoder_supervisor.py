@@ -8,8 +8,6 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import LSTM, Dense, Input
 from keras.models import Model
 from keras.utils import plot_model
-from tqdm import tqdm
-
 from utils import utils
 
 
@@ -35,6 +33,10 @@ class EncoderDecoder():
         self._model_kwargs = kwargs.get('model')
         self._alg_name = self._kwargs.get('alg')
 
+        # data args
+        self._raw_dataset_dir = self._data_kwargs.get('raw_dataset_dir')
+        self._len_data = self._data_kwargs.get('len_data')
+
         # logging.
         self._log_dir = self._get_log_dir(kwargs)
         log_level = self._kwargs.get('log_level', 'INFO')
@@ -43,6 +45,7 @@ class EncoderDecoder():
 
         # Model's Args
         self._model_type = self._model_kwargs.get('model_type')
+        self._verified_percentage = self._model_kwargs.get('verified_percentage')
         self._rnn_units = self._model_kwargs.get('rnn_units')
         self._seq_len = self._model_kwargs.get('seq_len')
         self._horizon = self._model_kwargs.get('horizon')
@@ -63,8 +66,9 @@ class EncoderDecoder():
         # Load data
         if self._model_type == 'ed' or self._model_type == 'encoder_decoder':
             self._data = utils.load_dataset_lstm_ed(seq_len=self._seq_len, horizon=self._horizon,
-                                                    input_dim=self._input_dim,
-                                                    **self._data_kwargs)
+                                                    input_dim=self._input_dim, raw_dataset_dir=self._raw_dataset_dir,
+                                                    r=self._verified_percentage, p=self._len_data)
+            print(self._data['decoder_target_train'])
         else:
             raise RuntimeError("Model must be lstm or encoder_decoder")
 

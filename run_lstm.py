@@ -3,12 +3,11 @@ import os
 import sys
 import tensorflow as tf
 import yaml
-
 from model.encoder_decoder_supervisor import EncoderDecoder
 
-config = tf.ConfigProto()
+config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
-session = tf.Session(config=config)
+# session = tf.Session(config=config)
 
 
 def print_lstm_info(mode, config):
@@ -16,26 +15,36 @@ def print_lstm_info(mode, config):
 
     print('|--- MODE:\t{}'.format(mode))
     print('|--- ALG:\t{}'.format(config['alg']))
-    print('|--- DATA:\t{}'.format(config['data']['data_name']))
+    print('|--- BASE_DIR:\t{}'.format(config['base_dir']))
+    print('|--- LOG_LEVEL:\t{}'.format(config['log_level']))
     print('|--- GPU:\t{}'.format(config['gpu']))
-    print('|--- GENERATE_DATA:\t{}'.format(config['data']['generate_data']))
+
+    print('----------------------- DATA -----------------------')
+    print('|--- BATCH_SIZE:\t{}'.format(config['data']['batch_size']))
+    print('|--- RAW_DATASET_DIR:\t{}'.format(config['data']['raw_dataset_dir']))
+    print('|--- EVAL_BATCH_SIZE:\t{}'.format(config['data']['eval_batch_size']))
+    print('|--- TEST_BATCH_SIZE:\t{}'.format(config['data']['test_batch_size']))
+    print('|--- DATA_NAME:\t{}'.format(config['data']['data_name']))
 
     print('----------------------- MODEL -----------------------')
-
+    print('|--- MODEL_TYPE:\t{}'.format(config['model']['model_type']))
     print('|--- SEQ_LEN:\t{}'.format(config['model']['seq_len']))
     print('|--- HORIZON:\t{}'.format(config['model']['horizon']))
     print('|--- INPUT_DIM:\t{}'.format(config['model']['input_dim']))
+    print('|--- VERIFIED_PERCENTAGE:\t{}'.format(config['model']['verified_percentage']))
+    print('|--- L1_DECAY:\t{}'.format(config['model']['l1_decay']))
     print('|--- NUM_NODES:\t{}'.format(config['model']['num_nodes']))
-    print('|--- N_RNN_LAYERS:\t{}'.format(config['model']['n_rnn_layers']))
     print('|--- OUTPUT_DIMS:\t{}'.format(config['model']['output_dim']))
     print('|--- RNN_UNITS:\t{}'.format(config['model']['rnn_units']))
+    print('|--- N_RNN_LAYERS:\t{}'.format(config['model']['n_rnn_layers']))
+
 
     if mode == 'train':
         print('----------------------- TRAIN -----------------------')
-        print('|--- EPOCHS:\t{}'.format(config['train']['epochs']))
         print('|--- DROPOUT:\t{}'.format(config['train']['dropout']))
+        print('|--- EPOCHS:\t{}'.format(config['train']['epochs']))
+        print('|--- OPTIMIZER:\t{}'.format(config['train']['optimizer']))
         print('|--- PATIENCE:\t{}'.format(config['train']['patience']))
-        print('|--- BATCH:\t{}'.format(config['data']['batch_size']))
         print('|--- CONTINUE_TRAIN:\t{}'.format(config['train']['continue_train']))
 
     else:
@@ -72,13 +81,13 @@ if __name__ == '__main__':
     sys.path.append(os.getcwd())
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cpu_only', default=False, type=str, help='Whether to run tensorflow on cpu.')
-    parser.add_argument('--config-file', default='data/model/pretrained/METR-LA/config.yaml', type=str,
+    parser.add_argument('--config-file', default='config/config_lstm_ed.yaml', type=str,
                         help='Config file for pretrained model.')
     parser.add_argument('--mode', default='train', type=str,
                         help='Run mode.')
     parser.add_argument('--model', default='lstm', type=str,
                         help='model.')
-    parser.add_argument('--output_filename', default='data/dcrnn_predictions.npz')
+    parser.add_argument('--output_filename', default='data/lstm_ed_predictions.npz')
     args = parser.parse_args()
 
     with open(args.config_file) as f:

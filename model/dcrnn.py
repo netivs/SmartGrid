@@ -1,5 +1,5 @@
 from sklearn import preprocessing
-from utils.model import binary_matrix
+from utils.utils import binary_matrix
 import random
 import numpy as np
 from numpy import array
@@ -12,7 +12,7 @@ def prepare_data(data, l=24, r=0.8, h=1, p=0.6):
     K = len(LOAD_AREAS)
     T = int(row_data * p)
     data = data[0:T]
-    
+
     for i in range (T - l - h):
         x_input = data.iloc[i:i+l, :].to_numpy()
         y_input = data.iloc[i+l:i+l+h, :].to_numpy()
