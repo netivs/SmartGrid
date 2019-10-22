@@ -48,11 +48,11 @@ In this study, we consider to estimate the load for each “load area” hourly 
 
 ### Problem Formulation <a name="problem_formulation"></a>
 
-Assume that there are K "load areas" in the grids. Let <img src="/tex/7b5c69854bf1ba5aecb122c8ddd74fe2.svg?invert_in_darkmode&sanitize=true" align=middle width=16.66101689999999pt height=27.91243950000002pt/> be the load value of area k (k = 1, K) at time-step t which t is considered as the current time-step. The problem is formulated as follows. 
+Assume that there are K "load areas" in the grids. Let <img src="/tex/7b5c69854bf1ba5aecb122c8ddd74fe2.svg?invert_in_darkmode&sanitize=true" align=middle width=16.66101689999999pt height=27.91243950000002pt/> be the load value of area k (k = 1, K) at time-step t which t is considered as the current time-step. The problem is formulated as follows.
 
 ***Input*** <a name="input"></a>
 
-<p align="center"><img src="/tex/f57604b222188ab96f6eeb2d92ca0d21.svg?invert_in_darkmode&sanitize=true" align=middle width=162.0530703pt height=59.178683850000006pt/></p>
+<p align="center"><img src="/tex/0bb5c0168087d8c83100a2a70c0f998b.svg?invert_in_darkmode&sanitize=true" align=middle width=162.0530703pt height=59.178683850000006pt/></p>
 <p align="center"><img src="/tex/1aca9d30370e93a90236a67f76837718.svg?invert_in_darkmode&sanitize=true" align=middle width=220.49139749999998pt height=14.611878599999999pt/></p>
 
 Where:
@@ -82,7 +82,7 @@ The hourly load estimated dataset is divided into three subsets for training, va
 ### Model Training <a name="model_training"></a>
 - Prepare training data for LSTM encoder-decoder
 
-&nbsp;&nbsp;&nbsp;&nbsp;dataX(-1, l, 1), dataY(-1,h,1)
+&nbsp;&nbsp;&nbsp;&nbsp;*e_x(-1, l, 1), d_x(-1,h,1), d_y(-1,h,1)*
 
 &emsp;Randomly create binary matrix <img src="/tex/bcd07b807305a9d37467c1be1af88cb4.svg?invert_in_darkmode&sanitize=true" align=middle width=44.068071299999986pt height=22.465723500000017pt/>
 
@@ -90,9 +90,12 @@ The hourly load estimated dataset is divided into three subsets for training, va
 
 &emsp;&emsp;*For i = 0 -> T - l - h:*
 
-1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, 1)*, y is the target with shape *(h,1)*. *x = (<img src="/tex/ea299e74f36b5d8ce3990a6d19d343a2.svg?invert_in_darkmode&sanitize=true" align=middle width=74.15442044999999pt height=27.91243950000002pt/>), y = (<img src="/tex/99e38df654a1a29749584d02dc97e411.svg?invert_in_darkmode&sanitize=true" align=middle width=120.28571609999997pt height=27.91243950000002pt/>)*
-2. If <img src="/tex/96caff1dc9392f9777c86aa50a855b4d.svg?invert_in_darkmode&sanitize=true" align=middle width=290.04922815000003pt height=27.91243950000002pt/> 
-3. dataX.append(x); dataY.append(y) 
+1. Data need to be transformed as format: <p align="center"><img src="/tex/d781f6fbc62c738a9382c6f550245dc0.svg?invert_in_darkmode&sanitize=true" align=middle width=76.6173012pt height=17.031940199999998pt/></p> where <img src="/tex/1317edcef4119650134675a9733a3d3d.svg?invert_in_darkmode&sanitize=true" align=middle width=15.10851044999999pt height=14.15524440000002pt/> is the input with shape *(l, 1)*, <img src="/tex/fddb50275f702b5af702ac3f3bc5ed81.svg?invert_in_darkmode&sanitize=true" align=middle width=14.733744299999989pt height=14.15524440000002pt/> is the target with shape *(h,1)*.
+
+	<p align="center"><img src="/tex/63071466b63dd7d45f392bcc9eeafd3e.svg?invert_in_darkmode&sanitize=true" align=middle width=519.1508487pt height=20.2118565pt/></p>
+
+2. If <img src="/tex/96caff1dc9392f9777c86aa50a855b4d.svg?invert_in_darkmode&sanitize=true" align=middle width=290.04922815000003pt height=27.91243950000002pt/>
+3. e_x.append(<img src="/tex/1317edcef4119650134675a9733a3d3d.svg?invert_in_darkmode&sanitize=true" align=middle width=15.10851044999999pt height=14.15524440000002pt/>); d_x.append(<img src="/tex/64ddb675e322bf1281650681445f5914.svg?invert_in_darkmode&sanitize=true" align=middle width=16.01033609999999pt height=22.831056599999986pt/>); d_y.append(<img src="/tex/885839bf3fa334609583ddbd937afdfb.svg?invert_in_darkmode&sanitize=true" align=middle width=15.63556994999999pt height=22.831056599999986pt/>)
 
 - Prepare training data for DCRNN
 
@@ -104,12 +107,12 @@ The hourly load estimated dataset is divided into three subsets for training, va
 
 &emsp;for i = 0 -> T - l - h: #T is the number of time-steps in the training set
 
-4. Data need to be transformed as format: (x, y) where x is the input with shape *(l, K, 1)*, y is the target with shape *(h, K, 1)*
+1. Data need to be transformed as format: (x, y) where x is the input with shape *(l, K, 1)*, y is the target with shape *(h, K, 1)*
 
-5. Change the value <img src="/tex/47145dd469cc1c3848c30ceccd72bf11.svg?invert_in_darkmode&sanitize=true" align=middle width=16.66101689999999pt height=27.91243950000002pt/> whose <img src="/tex/429ceb369d5d0b5f585aade0bbbbab3c.svg?invert_in_darkmode&sanitize=true" align=middle width=52.65788384999998pt height=27.91243950000002pt/> as <img src="/tex/e49c6dac8af82421dba6bed976a80bd9.svg?invert_in_darkmode&sanitize=true" align=middle width=16.43840384999999pt height=14.15524440000002pt/> random<img src="/tex/2c5576bb382cbfcbf6a548af75b5be33.svg?invert_in_darkmode&sanitize=true" align=middle width=123.25328894999998pt height=27.91243950000002pt/>, where <img src="/tex/aca94dc4280088e4b15ee4be41751fd0.svg?invert_in_darkmode&sanitize=true" align=middle width=13.18495034999999pt height=24.7161288pt/> is the stdev of the training set.
+2. Change the value <img src="/tex/47145dd469cc1c3848c30ceccd72bf11.svg?invert_in_darkmode&sanitize=true" align=middle width=16.66101689999999pt height=27.91243950000002pt/> whose <img src="/tex/429ceb369d5d0b5f585aade0bbbbab3c.svg?invert_in_darkmode&sanitize=true" align=middle width=52.65788384999998pt height=27.91243950000002pt/> as <img src="/tex/e49c6dac8af82421dba6bed976a80bd9.svg?invert_in_darkmode&sanitize=true" align=middle width=16.43840384999999pt height=14.15524440000002pt/> random<img src="/tex/2c5576bb382cbfcbf6a548af75b5be33.svg?invert_in_darkmode&sanitize=true" align=middle width=123.25328894999998pt height=27.91243950000002pt/>, where <img src="/tex/aca94dc4280088e4b15ee4be41751fd0.svg?invert_in_darkmode&sanitize=true" align=middle width=13.18495034999999pt height=24.7161288pt/> is the stdev of the training set.
 
-6. dataX.append(x); dataY.append(y)
- 
+3. dataX.append(x); dataY.append(y)
+
 ### Evaluation's Metrices <a name="evaluation_metric"></a>
 1. MAE
 2. RMSE
