@@ -1,15 +1,14 @@
-import os
-import time
-
 import keras.callbacks as keras_callbacks
 import numpy as np
+import os
 import pandas as pd
+import time
 import yaml
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import LSTM, Dense, Input
 from keras.models import Model
 from keras.utils import plot_model
 from tqdm import tqdm
-from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from utils import utils
 
@@ -34,7 +33,6 @@ class EncoderDecoder():
         self._train_kwargs = kwargs.get('train')
         self._test_kwargs = kwargs.get('test')
         self._model_kwargs = kwargs.get('model')
-
         self._alg_name = self._kwargs.get('alg')
 
         # logging.

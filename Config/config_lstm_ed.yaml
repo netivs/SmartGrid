@@ -1,32 +1,33 @@
 ---
-alg: LSTM-ED
-base_dir: logs/pretrained/SmartGrid
+alg: LSTM
+base_dir: logs/pretrained/Abilene
 log_level: INFO
 gpu: 0
 mon_ratio: 0.3
 data:
   batch_size: 512
-  raw_dataset_dir: Dataset/data.npy
+  raw_dataset_dir: Dataset/Abilene2d.npy
   val_batch_size: 1
   eval_batch_size: 1
   test_batch_size: 1
-  data_name: name
+  data_name: Abilene
+  day_size: 288
   data_size: 1.0
 model:
   model_type: ed
   horizon: 1
   input_dim: 2
+  l1_decay: 0
   num_nodes: 144
   output_dim: 1
   rnn_units: 64
   seq_len: 36
   n_rnn_layers: 2
 train:
-  base_lr: 0.01
   dropout: 0
-  epoch: 64
   epochs: 50000
-  patience: 30
+  optimizer: adam
+  patience: 50
   continue_train: False
 test:
   run_times: 50
