@@ -47,10 +47,13 @@ def get_logger(log_dir, name, log_filename='info.log', level=logging.INFO):
 def prepare_train_valid_test_2d(data, p=0.6):
     # len(data_load_area) = data.shape[0]
     train_size = int(data.shape[0] * p)
-    train_set = data[0:train_size]
-    test_set = data[train_size:]
+    valid_size = int(data.shape[0] * 0.2)
 
-    return train_set, test_set
+    train_set = data[0:train_size]
+    valid_set = data[train_size: train_size+valid_size]
+    test_set = data[train_size+valid_size:]
+
+    return train_set, valid_set, test_set
 
 
 def create_data_lstm_ed(data, seq_len, r, input_dim=1, horizon=1):
@@ -96,21 +99,24 @@ def load_dataset_lstm_ed(seq_len, horizon, input_dim, raw_dataset_dir, r, p, **k
     raw_data = np.load(raw_dataset_dir)['data']
 
     print('|--- Splitting train-test set.')
-    train_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
+    train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
     print('|--- Normalizing the train set.')
     data = {}
     scaler = StandardScaler(mean=train_data2d.mean(), std=train_data2d.std())
     train_data2d_norm = scaler.transform(train_data2d)
+    valid_data2d_norm = scaler.transform(valid_data2d)
     test_data2d_norm = scaler.transform(test_data2d)
 
     data['test_data_norm'] = test_data2d_norm
 
     encoder_input_train, decoder_input_train, decoder_target_train = create_data_lstm_ed(train_data2d_norm,
                                                 seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
+    encoder_input_val, decoder_input_val, decoder_target_val = create_data_lstm_ed(valid_data2d_norm,
+                                                seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
     encoder_input_eval, decoder_input_eval, decoder_target_eval = create_data_lstm_ed(test_data2d_norm,
                                                 seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
 
-    for cat in ["train", "eval"]:
+    for cat in ["train", "val", "eval"]:
         e_x, d_x, d_y = locals()["encoder_input_" + cat], locals()[
             "decoder_input_" + cat], locals()["decoder_target_" + cat]
         print(cat, "e_x: ", e_x.shape, "d_x:", d_x.shape, "d_y:", d_y.shape)

@@ -7,7 +7,7 @@ from model.encoder_decoder_supervisor import EncoderDecoder
 
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
-# session = tf.Session(config=config)
+session = tf.compat.v1.Session(config=config)
 
 
 def print_lstm_info(mode, config):
@@ -59,10 +59,10 @@ def print_lstm_info(mode, config):
 
 def train_lstm_ed(config):
     print('|-- Run model training dgc_lstm.')
-    with tf.device('/device:GPU:{}'.format(config['gpu'])):
-        model = EncoderDecoder(is_training=True, **config)
-        model.plot_models()
-        model.train()
+    # with tf.device('/device:GPU:{}'.format(config['gpu'])):
+    model = EncoderDecoder(is_training=True, **config)
+    model.plot_models()
+    model.train()
 
 
 def test_lstm_ed(config):
