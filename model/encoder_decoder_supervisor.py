@@ -121,7 +121,7 @@ class EncoderDecoder():
         encoder_states = [state_h, state_c]
 
         # Set up the decoder, using `encoder_states` as initial state.
-        decoder_inputs = Input(shape=(None, 1))
+        decoder_inputs = Input(shape=(None, self._output_dim))
         # We set up our decoder to return full output sequences,
         # and to return internal states as well. We don't use the
         # return states in the training model, but we will use them in inference.
@@ -129,7 +129,7 @@ class EncoderDecoder():
         decoder_outputs, _, _ = decoder_lstm(decoder_inputs,
                                              initial_state=encoder_states)
 
-        decoder_dense = Dense(1, activation='relu')
+        decoder_dense = Dense(self._output_dim, activation='relu')
         decoder_outputs = decoder_dense(decoder_outputs)
 
         # Define the model that will turn
@@ -162,9 +162,6 @@ class EncoderDecoder():
 
             return model
 
-    def test(self):
-        pass
-
     def train(self):
         self.model.compile(optimizer='adam', loss='mse', metrics=['mse', 'mae'])
 
@@ -189,6 +186,42 @@ class EncoderDecoder():
 
     def evaluate(self):
         pass
+
+    
+    def test(self, test_data, infenc, infdec, horizon, n_feature, k_time_series=29):
+        # test_data
+        T = len(self._data['encoder_input_eval']) + len(self._data['decoder_input_eval']) + len(self._data['decoder_target_eval'])
+        
+        # x(K,l,1)
+        test_data = self._data['encoder_input_eval']
+        yhats = list()
+        predictions = list()
+        for t ỉn range(0, T-l-horizon, horizon)
+            for i in range(k_time_series):
+                output = self.predict(infenc, infdec, test_data[i], horizon, n_feature)
+                predictions.append(output)
+            # step yhat.append(y)
+            yhats.append(predictions)
+            # update y here
+            ##
+        predictions = np.stack(predictions, axis=0)
+        return predictions
+
+    def predict(self, infenc, infdec, source, horizon, n_feature, k_time_series):
+        # encode
+        state = infenc.predict(source)
+        # start of sequence input
+        target_seq = array([0.0 for _ in range(n_feature)]).reshape(1, 1, n_feature)
+        # collect predictions
+        prediction = list()
+        for t in range(horizon):
+            yhat, h, c = infdec.predict([target_seq] + state)
+            prediction.append(yhat[0,0,:])
+            state = [h, c]
+            # update target sequence
+            target_seq = yhat
+        print(prediction.shape)
+    return prediction
 
     def load(self):
         self.model.load_weights(self._log_dir + 'best_model.hdf5')
