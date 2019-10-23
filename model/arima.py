@@ -19,26 +19,24 @@ def model_arima(data, l=24, r=0.8, h=3, p =0.8):
         if series.empty == True:
             continue
         X = series.values
-        size = int(len(X) * p)
-        train, test = X[0:size], X[size:len(X)]
+        T = int(len(X) * p)
+        train, test = X[0:T], X[T:len(X)]
         history = [x for x in train]
-
         # Cant pass history[-l:] directly to auto_arima
         histotry = history[-l:]
-        for t in range(0, T-l-h, h):
+        for t in range(0, len(test) - 1, h):
             # Only use l time-steps as inputs
-            model = auto_arima(np.array(history[-l:]), error_action = 'ignore')
+            model = auto_arima(np.array(history[-l:]), error_action = 'warn')
             yhat = model.predict(n_periods = h)
             predictions.append(yhat)
             gt.append(test[t:t+h])
             for i in range(h):
-                if bm[(t+ h + i), LOAD_AREAS.index(load_area)] == 1:
+                if bm[(t + T + i), LOAD_AREAS.index(load_area)] == 1:
                     # Update the data if verified == True
                     history.append(test[t+i])
                 else:
                     # Otherwise use the predicted data
                     history.append(yhat[i])
-
     predictions = np.stack(predictions, axis=0)
     gt = np.stack(gt, axis=0)
     metric_load_area = (load_area, gt.flatten(), predictions.flatten())
