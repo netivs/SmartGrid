@@ -7,9 +7,6 @@ from utils.utils import cal_error, binary_matrix, cal_error_all_load_areas
 # h: The number of time-steps need to be predicted
 # p: The percentage size of train data compared to the whold data
 def model_arima(data, l=24, r=0.8, h=3, p =0.8):
-    # this list contains tuple {'name_of_load_area', 'gt list', 'prediction list'} to get all metrics of all load_ares
-    metrics_all_load_area = []
-
     bm = binary_matrix(r, len(LOAD_AREAS), data.shape[0])
     predictions = list()
     gt = []
@@ -39,5 +36,4 @@ def model_arima(data, l=24, r=0.8, h=3, p =0.8):
                     history.append(yhat[i])
     predictions = np.stack(predictions, axis=0)
     gt = np.stack(gt, axis=0)
-    metric_load_area = (load_area, gt.flatten(), predictions.flatten())
     cal_error(gt.flatten(), predictions.flatten())

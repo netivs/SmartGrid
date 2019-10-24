@@ -1,7 +1,8 @@
 import keras.callbacks as keras_callbacks
+import pandas as pd
 import numpy as np
 import os
-import pandas as pd
+from numpy import array
 import time
 import yaml
 from keras.callbacks import ModelCheckpoint, EarlyStopping
@@ -68,7 +69,6 @@ class EncoderDecoder():
             self._data = utils.load_dataset_lstm_ed(seq_len=self._seq_len, horizon=self._horizon,
                                                     input_dim=self._input_dim, raw_dataset_dir=self._raw_dataset_dir,
                                                     r=self._verified_percentage, p=self._len_data)
-            print(self._data['decoder_target_train'])
         else:
             raise RuntimeError("Model must be lstm or encoder_decoder")
 
@@ -188,40 +188,52 @@ class EncoderDecoder():
         pass
 
     
-    def test(self, test_data, infenc, infdec, horizon, n_feature, k_time_series=29):
-        # test_data
-        T = len(self._data['encoder_input_eval']) + len(self._data['decoder_input_eval']) + len(self._data['decoder_target_eval'])
-        
-        # x(K,l,1)
+    def test(self):
+        K=29
+        # T = len(eval_data)/29
+        T = int((len(self._data['encoder_input_eval']) + len(self._data['decoder_input_eval']) + len(self._data['decoder_target_eval']))/K)
+        l = self._seq_len
+        h = self._horizon
         test_data = self._data['encoder_input_eval']
-        yhats = list()
-        predictions = list()
-        for t ỉn range(0, T-l-horizon, horizon)
-            for i in range(k_time_series):
-                output = self.predict(infenc, infdec, test_data[i], horizon, n_feature)
-                predictions.append(output)
-            # step yhat.append(y)
-            yhats.append(predictions)
-            # update y here
-            ##
+        expected_data = self._data['decoder_target_eval']
+        predictions, expected = list(), list()
+        for t in range(0, T-l-h, h):
+            yhats, gt = list(), list()
+            if len(test_data[t*K:(t+1)*K,:,:]) == 0:
+                print("End of sequence")
+                break
+            for i in range(t*K, (t+1)*K):
+                source = test_data[i, :, :].reshape(1, l, self._input_dim)
+                output = self._predict(source, h, self._input_dim)
+                yhats.append(output)
+                gt.append(expected_data[i])
+                # UPDATE Y HERE
+                ##
+            gt = np.stack(gt, axis=0)
+            yhats = np.stack(yhats, axis=0)
+            predictions.append(yhats)
+            expected.append(gt)
         predictions = np.stack(predictions, axis=0)
+        expected = np.stack(expected, axis=0)
+        print(predictions.shape, expected.shape)
+        utils.cal_error(expected.flatten(), predictions.flatten())
         return predictions
 
-    def predict(self, infenc, infdec, source, horizon, n_feature, k_time_series):
+    def _predict(self, source, horizon, n_feature):
         # encode
-        state = infenc.predict(source)
+        state = self.encoder_model.predict(source)
         # start of sequence input
         target_seq = array([0.0 for _ in range(n_feature)]).reshape(1, 1, n_feature)
         # collect predictions
         prediction = list()
         for t in range(horizon):
-            yhat, h, c = infdec.predict([target_seq] + state)
+            yhat, h, c = self.decoder_model.predict([target_seq] + state)
             prediction.append(yhat[0,0,:])
             state = [h, c]
             # update target sequence
             target_seq = yhat
-        print(prediction.shape)
-    return prediction
+        prediction = np.stack(prediction, axis=0)
+        return prediction
 
     def load(self):
         self.model.load_weights(self._log_dir + 'best_model.hdf5')
