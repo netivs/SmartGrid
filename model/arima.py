@@ -16,19 +16,20 @@ def model_arima(data, l=24, r=0.8, h=3, p =0.8):
         if series.empty == True:
             continue
         X = series.values
-        T = int(len(X) * p)
-        train, test = X[0:T], X[T:len(X)]
+        T = len(X)
+        size = int(T * p)
+        train, test = X[0:size], X[size:len(X)]
         history = [x for x in train]
         # Cant pass history[-l:] directly to auto_arima
         histotry = history[-l:]
-        for t in range(0, len(test) - 1, h):
+        for t in range(0, T-l-h, h):
             # Only use l time-steps as inputs
             model = auto_arima(np.array(history[-l:]), error_action = 'warn')
             yhat = model.predict(n_periods = h)
             predictions.append(yhat)
             gt.append(test[t:t+h])
             for i in range(h):
-                if bm[(t + T + i), LOAD_AREAS.index(load_area)] == 1:
+                if bm[(t + size + i), LOAD_AREAS.index(load_area)] == 1:
                     # Update the data if verified == True
                     history.append(test[t+i])
                 else:

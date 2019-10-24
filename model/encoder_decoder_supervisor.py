@@ -190,34 +190,39 @@ class EncoderDecoder():
     
     def test(self):
         K=29
-        # T = len(eval_data)/29
-        T = int((len(self._data['encoder_input_eval']) + len(self._data['decoder_input_eval']) + len(self._data['decoder_target_eval']))/K)
+        data_set = self._data['test_data_norm']
+        T = len(data_set)     
+        bm = utils.binary_matrix(self._verified_percentage, K, len(data_set))
         l = self._seq_len
         h = self._horizon
-        test_data = self._data['encoder_input_eval']
-        expected_data = self._data['decoder_target_eval']
-        predictions, expected = list(), list()
+        predictions, gt = list(), list()
+        pd = data_set[:l]
         for t in range(0, T-l-h, h):
-            yhats, gt = list(), list()
-            if len(test_data[t*K:(t+1)*K,:,:]) == 0:
-                print("End of sequence")
-                break
-            for i in range(t*K, (t+1)*K):
-                source = test_data[i, :, :].reshape(1, l, self._input_dim)
-                output = self._predict(source, h, self._input_dim)
-                yhats.append(output)
-                gt.append(expected_data[i])
-                # UPDATE Y HERE
-                ##
-            gt = np.stack(gt, axis=0)
-            yhats = np.stack(yhats, axis=0)
-            predictions.append(yhats)
-            expected.append(gt)
+               
+            for column_load_area in range(K):
+                tmp_source = pd[-l:, column_load_area]
+                source = tmp_source.reshape(1, len(tmp_source), 1)
+                yhats = self._predict(source, h, self._input_dim)
+
+                # update pd
+                for i in range(len(yhats)):
+                    if bm[(t+l+i), column_load_area] == 1:
+                        # Update the data if verified == True
+                        np.append(pd, data_set[t+l+i, column_load_area])
+                    else:
+                        # Otherwise use the predicted data
+                        np.append(pd, yhats[i])
+
+                # add value for predictions and gt to compare
+                predictions.append(yhats)                        
+                gt.append(data_set[t+l:t+l+h, column_load_area])
+
         predictions = np.stack(predictions, axis=0)
-        expected = np.stack(expected, axis=0)
-        print(predictions.shape, expected.shape)
-        utils.cal_error(expected.flatten(), predictions.flatten())
-        return predictions
+        predictions = predictions.reshape(predictions.shape[0], predictions.shape[1])
+        gt = np.stack(gt, axis=0)
+        utils.cal_error(gt.flatten(), predictions.flatten())
+        # save bm and pd to log dir
+        np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
 
     def _predict(self, source, horizon, n_feature):
         # encode
