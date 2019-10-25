@@ -159,14 +159,14 @@ class EncoderDecoder():
 
             return model
 
-    def _predict(self, input_seq, last_data):
+    def _predict(self, input_seq):
         states_value = self.encoder_model.predict(input_seq)
 
         # Generate empty target sequence of length 1.
         target_seq = np.zeros((self._nodes, 1, 1))
         # Populate the first character of target sequence with the start character.
         # target_seq[:, 0, 0] = tm_pred[ts + self._seq_len - 1]
-        target_seq[:, 0, 0] = last_data
+        target_seq[:, 0, 0] = input_seq[-1]
 
         yhat = np.zeros(shape=(self._horizon, self._nodes),
                         dtype='float32')
@@ -196,7 +196,7 @@ class EncoderDecoder():
         ground_truth = []
         for i in tqdm(range(0, test_data.shape[0] - self._horizon - self._seq_len), self._horizon):
             en_input = pd[i:(i + self._seq_len)]
-            yhat = self._predict(en_input, last_data=pd[i + self._seq_len - 1])
+            yhat = self._predict(en_input)
             prediction.append(yhat.copy())
             ground_truth.append(test_data[i + self._seq_len:i + self._seq_len + self._horizon])
             # Update yhat
