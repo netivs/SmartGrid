@@ -1,8 +1,9 @@
+import os
+import time
+
 import keras.callbacks as keras_callbacks
 import numpy as np
-import os
 import pandas as pd
-import time
 import yaml
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import LSTM, Dense, Input
@@ -158,9 +159,59 @@ class EncoderDecoder():
 
             return model
 
+    def _predict(self, input_seq, last_data):
+        states_value = self.encoder_model.predict(input_seq)
+
+        # Generate empty target sequence of length 1.
+        target_seq = np.zeros((self._nodes, 1, 1))
+        # Populate the first character of target sequence with the start character.
+        # target_seq[:, 0, 0] = tm_pred[ts + self._seq_len - 1]
+        target_seq[:, 0, 0] = last_data
+
+        yhat = np.zeros(shape=(self._horizon, self._nodes),
+                        dtype='float32')
+        for i in range(self._horizon):
+            output_tokens, h, c = self.decoder_model.predict(
+                [target_seq] + states_value)
+
+            output_tokens = output_tokens[:, -1, 0]
+
+            yhat[i] = output_tokens
+
+            target_seq = np.zeros((self._nodes, 1, 1))
+            target_seq[:, 0, 0] = output_tokens
+
+            # Update states
+            states_value = [h, c]
+
+        return yhat
+
     def test(self):
-        #todo
-        pass
+        test_data = self._data['test_data_norm']
+        bm = utils.binary_matrix(self._verified_percentage, test_data.shape[0], self._nodes)
+
+        pd = np.zeros(shape=(test_data.shape[0] - self._horizon, self._nodes),
+                      dtype='float32')
+        pd[0:self._seq_len] = test_data[0:self._seq_len]
+        prediction = []
+        ground_truth = []
+        for i in tqdm(range(test_data.shape[0] - self._horizon - self._seq_len)):
+            en_input = pd[i:i + self._seq_len]
+            yhat = self._predict(en_input, last_data=pd[i + self._seq_len - 1, :])
+
+            prediction.append(np.expand_dims(yhat, axis=0))
+
+            _bm = bm[i + self._seq_len:i + self._seq_len + self._horizon]
+
+            # invert of sampling: for choosing value from the original data
+            _preds = yhat * (1.0 - _bm)
+            _gt = test_data[i + self._seq_len:i + self._seq_len + self._horizon]
+            ground_truth.append(np.expand_dims(test_data[i + self._seq_len:i + self._seq_len + self._horizon], axis=0))
+            _gt = _gt * _bm
+            # Concatenating new_input into current rnn_input
+            pd[i + self._seq_len:i + self._seq_len + self._horizon] = _preds + _gt
+
+        return
 
     def train(self):
         self.model.compile(optimizer='adam', loss='mse', metrics=['mse', 'mae'])
