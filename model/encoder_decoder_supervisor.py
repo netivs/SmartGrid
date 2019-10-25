@@ -190,26 +190,21 @@ class EncoderDecoder():
         test_data = self._data['test_data_norm']
         bm = utils.binary_matrix(self._verified_percentage, test_data.shape[0], self._nodes)
 
-        pd = np.zeros(shape=(test_data.shape[0] - self._horizon, self._nodes),
-                      dtype='float32')
+        pd = np.zeros(shape=(test_data.shape[0] - self._horizon, self._nodes), dtype='float32')
         pd[0:self._seq_len] = test_data[0:self._seq_len]
         prediction = []
         ground_truth = []
-        for i in tqdm(range(test_data.shape[0] - self._horizon - self._seq_len)):
-            en_input = pd[i:i + self._seq_len]
-            yhat = self._predict(en_input, last_data=pd[i + self._seq_len - 1, :])
-
-            prediction.append(np.expand_dims(yhat, axis=0))
-
+        for i in tqdm(range(0, test_data.shape[0] - self._horizon - self._seq_len), self._horizon):
+            en_input = pd[i:(i + self._seq_len)]
+            yhat = self._predict(en_input, last_data=pd[i + self._seq_len - 1])
+            prediction.append(yhat.copy())
+            ground_truth.append(test_data[i + self._seq_len:i + self._seq_len + self._horizon])
+            # Update yhat
             _bm = bm[i + self._seq_len:i + self._seq_len + self._horizon]
+            _gt = test_data[i + self._seq_len:i + self._seq_len + self._horizon].copy()
+            pd[(i + self._seq_len):(i + self._seq_len + self._horizon)] = yhat * (1.0 - _bm) + _gt * _bm
 
-            # invert of sampling: for choosing value from the original data
-            _preds = yhat * (1.0 - _bm)
-            _gt = test_data[i + self._seq_len:i + self._seq_len + self._horizon]
-            ground_truth.append(np.expand_dims(test_data[i + self._seq_len:i + self._seq_len + self._horizon], axis=0))
-            _gt = _gt * _bm
-            # Concatenating new_input into current rnn_input
-            pd[i + self._seq_len:i + self._seq_len + self._horizon] = _preds + _gt
+        # todo: Calculate MAE, RMSE, MAPE here
 
         return
 
