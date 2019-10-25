@@ -59,7 +59,7 @@ def prepare_train_valid_test_2d(data, p=0.6):
 def create_data_lstm_ed(data, seq_len, r, input_dim=1, horizon=1):
     K = data.shape[1]
     T = data.shape[0]
-    bm = binary_matrix(r, K, T)
+    bm = binary_matrix(r, T, K)
     e_x, d_x, d_y = list(), list(), list()
     for col in range(K):
         data_load_area = data[:, col]
@@ -171,5 +171,5 @@ def cal_error(test_arr, prediction_arr):
 
 def binary_matrix(r, row, col):
     tf = np.array([1, 0])
-    bm = np.random.choice(tf, size=(col, row), p=[r, 1.0 - r])
+    bm = np.random.choice(tf, size=(row, col), p=[r, 1.0 - r])
     return bm

@@ -7,7 +7,7 @@ from utils.utils import cal_error, binary_matrix, cal_error_all_load_areas
 # h: The number of time-steps need to be predicted
 # p: The percentage size of train data compared to the whold data
 def model_arima(data, l=24, r=0.8, h=3, p =0.8):
-    bm = binary_matrix(r, len(LOAD_AREAS), data.shape[0])
+    bm = binary_matrix(r, data.shape[0], len(LOAD_AREAS))
     predictions = list()
     gt = []
     # run predict for 29 nodes

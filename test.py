@@ -1,12 +1,9 @@
 import numpy as np
 
-array = np.arange(20).reshape(4,5)
+array = np.array([[1],[2],[3]])
+array2 = np.array([[1],[2]])
 
-for i in range(5):
-    x = array[:,i]
-    x = x.reshape(1, len(x), 1)
 
-arr = np.array(["Hi", "Hello", "Bonjour", "Hola"])
-
-arr.push(var[0:3])
-print(arr)
+array = np.vstack((array, array2))
+print(array.shape)
+print(array)

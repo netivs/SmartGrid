@@ -187,36 +187,36 @@ class EncoderDecoder():
     def evaluate(self):
         pass
 
-    
     def test(self):
         K=29
         data_set = self._data['test_data_norm']
         T = len(data_set)     
-        bm = utils.binary_matrix(self._verified_percentage, K, len(data_set))
+        bm = utils.binary_matrix(self._verified_percentage, len(data_set), K)
         l = self._seq_len
         h = self._horizon
         predictions, gt = list(), list()
         pd = data_set[:l]
         for t in range(0, T-l-h, h):
-               
+            new_rows = np.zeros((h,K))
+            pd = np.vstack((pd, new_rows))
             for column_load_area in range(K):
-                tmp_source = pd[-l:, column_load_area]
+                tmp_source = pd[-l+h:-h, column_load_area]
                 source = tmp_source.reshape(1, len(tmp_source), 1)
                 yhats = self._predict(source, h, self._input_dim)
-
                 # update pd
                 for i in range(len(yhats)):
                     if bm[(t+l+i), column_load_area] == 1:
                         # Update the data if verified == True
-                        np.append(pd, data_set[t+l+i, column_load_area])
+                        pd[-h+i][column_load_area] = data_set[t+l+i][column_load_area]
                     else:
                         # Otherwise use the predicted data
-                        np.append(pd, yhats[i])
-
+                        pd[-h+i][column_load_area] = yhats[i]
+                        print(yhats[i])
+                        
                 # add value for predictions and gt to compare
                 predictions.append(yhats)                        
                 gt.append(data_set[t+l:t+l+h, column_load_area])
-
+        print(pd)
         predictions = np.stack(predictions, axis=0)
         predictions = predictions.reshape(predictions.shape[0], predictions.shape[1])
         gt = np.stack(gt, axis=0)

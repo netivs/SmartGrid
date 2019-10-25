@@ -7,7 +7,7 @@ from utils.constant import LOAD_AREAS
 
 def prepare_data(data, l=24, r=0.8, h=1, p=0.6):
     row_data = data.shape[0]
-    bm = binary_matrix(r, len(LOAD_AREAS), row_data)
+    bm = binary_matrix(r, row_data, len(LOAD_AREAS))
     X, Y = list(), list()
     K = len(LOAD_AREAS)
     T = int(row_data * p)
