@@ -188,57 +188,54 @@ class EncoderDecoder():
         pass
 
     def test(self):
-        K=29
-        data_set = self._data['test_data_norm']
-        T = len(data_set)     
-        bm = utils.binary_matrix(self._verified_percentage, len(data_set), K)
+        data_test = self._data['test_data_norm']
+        T = len(data_test)     
+        bm = utils.binary_matrix(self._verified_percentage, len(data_test), self._nodes)
         l = self._seq_len
         h = self._horizon
+        pd = np.zeros(shape=(T-h, self._nodes), dtype='float32')
+        pd[:l] = data_test[:l]
         predictions, gt = list(), list()
-        pd = data_set[:l]
-        for t in range(0, T-l-h, h):
-            new_rows = np.zeros((h,K))
-            pd = np.vstack((pd, new_rows))
-            for column_load_area in range(K):
-                tmp_source = pd[-l+h:-h, column_load_area]
-                source = tmp_source.reshape(1, len(tmp_source), 1)
-                yhats = self._predict(source, h, self._input_dim)
-                # update pd
-                for i in range(len(yhats)):
-                    if bm[(t+l+i), column_load_area] == 1:
-                        # Update the data if verified == True
-                        pd[-h+i][column_load_area] = data_set[t+l+i][column_load_area]
-                    else:
-                        # Otherwise use the predicted data
-                        pd[-h+i][column_load_area] = yhats[i]
-                        print(yhats[i])
-                        
-                # add value for predictions and gt to compare
-                predictions.append(yhats)                        
-                gt.append(data_set[t+l:t+l+h, column_load_area])
-        print(pd)
+        for i in range(0, T-l-h, h):
+            source2d = pd[i:i+l]
+            source3d = source2d.reshape(self._nodes, l, self._input_dim)
+            yhats = self._predict(source3d)
+            predictions.append(yhats)
+            gt.append(data_test[i+l:i+l+h])
+            # update y
+            _bm = bm[i+l:i+l+h]
+            _gt = data_test[i+l:i+l+h].copy()
+            updated_y = yhats * (1.0 - _bm) + _gt * _bm
+            pd[i+l:i+l+h] = updated_y
+            
         predictions = np.stack(predictions, axis=0)
-        predictions = predictions.reshape(predictions.shape[0], predictions.shape[1])
         gt = np.stack(gt, axis=0)
         utils.cal_error(gt.flatten(), predictions.flatten())
         # save bm and pd to log dir
         np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
 
-    def _predict(self, source, horizon, n_feature):
-        # encode
-        state = self.encoder_model.predict(source)
-        # start of sequence input
-        target_seq = array([0.0 for _ in range(n_feature)]).reshape(1, 1, n_feature)
-        # collect predictions
-        prediction = list()
-        for t in range(horizon):
-            yhat, h, c = self.decoder_model.predict([target_seq] + state)
-            prediction.append(yhat[0,0,:])
-            state = [h, c]
-            # update target sequence
-            target_seq = yhat
-        prediction = np.stack(prediction, axis=0)
-        return prediction
+    def _predict(self, source):
+        states_value = self.encoder_model.predict(source)
+
+        # Generate empty target sequence of length 1.
+        target_seq = np.zeros((self._nodes, 1, self._input_dim))
+        # Populate the first character of target sequence with the start character.
+        # target_seq[:, 0, 0] = source[-1]
+
+        yhat = np.zeros(shape=(self._horizon, self._nodes),
+                        dtype='float32')
+        for i in range(self._horizon):
+            output_tokens, h, c = self.decoder_model.predict(
+                [target_seq] + states_value)
+            output_tokens = output_tokens[:, -1, 0]
+            yhat[i] = output_tokens
+
+            target_seq = np.zeros((self._nodes, 1, self._input_dim))
+            target_seq[:, 0, 0] = output_tokens
+
+            # Update states
+            states_value = [h, c]
+        return yhat
 
     def load(self):
         self.model.load_weights(self._log_dir + 'best_model.hdf5')
