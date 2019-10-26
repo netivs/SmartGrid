@@ -12,7 +12,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import LSTM, Dense, Input
 from keras.models import Model
 from keras.utils import plot_model
-from utils import utils
+from lib import utils
 
 
 class TimeHistory(keras_callbacks.Callback):

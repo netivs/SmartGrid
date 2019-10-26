@@ -1,5 +1,5 @@
 import numpy as np
-from utils.constant import LOAD_AREAS, TRANSMISSION_ZONES
+from lib.constant import LOAD_AREAS, TRANSMISSION_ZONES
 
 def construct_graph(data_grid, nodes = 29):
     undirected_graph = np.zeros((nodes,nodes), dtype = np.float32)

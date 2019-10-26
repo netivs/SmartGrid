@@ -36,6 +36,7 @@ class DCRNNSupervisor(object):
         self._logger.info(kwargs)
 
         # Data preparation
+        # pass here
         self._data = utils.load_dataset(**self._data_kwargs)
         for k, v in self._data.items():
             if hasattr(v, 'shape'):

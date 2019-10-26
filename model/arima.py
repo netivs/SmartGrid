@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import time
-from utils import utils
+from lib import utils
 from pmdarima.arima import auto_arima
 
 class Arima():
