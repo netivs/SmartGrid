@@ -24,7 +24,7 @@ def print_lstm_info(mode, config):
     print('|--- RAW_DATASET_DIR:\t{}'.format(config['data']['raw_dataset_dir']))
     print('|--- EVAL_BATCH_SIZE:\t{}'.format(config['data']['eval_batch_size']))
     print('|--- TEST_BATCH_SIZE:\t{}'.format(config['data']['test_batch_size']))
-    print('|--- DATA_NAME:\t{}'.format(config['data']['data_name']))
+    print('|--- LEN_DATA:\t{}'.format(config['data']['len_data']))
 
     print('----------------------- MODEL -----------------------')
     print('|--- MODEL_TYPE:\t{}'.format(config['model']['model_type']))

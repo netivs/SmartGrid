@@ -1,6 +1,6 @@
 ---
-alg: LSTM
-base_dir: log
+alg: lstm_ed
+base_dir: log/lstmed
 log_level: INFO
 gpu: 0
 data:
@@ -8,7 +8,6 @@ data:
   raw_dataset_dir: data/data_load_area.npz
   eval_batch_size: 1
   test_batch_size: 1
-  data_name: DataLoadArea
   len_data: 0.6
 model:
   model_type: ed

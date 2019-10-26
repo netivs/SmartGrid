@@ -210,9 +210,12 @@ class EncoderDecoder():
             
         predictions = np.stack(predictions, axis=0)
         gt = np.stack(gt, axis=0)
-        utils.cal_error(gt.flatten(), predictions.flatten())
+
         # save bm and pd to log dir
         np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
+        # save metrics to log dir
+        error_list = utils.cal_error(gt.flatten(), predictions.flatten())
+        utils.save_metrics(error_list, self._log_dir, self._alg_name + "_metrics")
 
     def _predict(self, source):
         states_value = self.encoder_model.predict(source)

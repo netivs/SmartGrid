@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import os
+import csv
 import random
 import pandas as pd
 import pickle
@@ -167,9 +168,17 @@ def cal_error(test_arr, prediction_arr):
     y_true, y_pred = np.array(test_arr), np.array(prediction_arr)
     error_mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
     print('MAPE: %.3f' % error_mape)
+    error_list = [error_mae, error_rmse, error_mape]
+    
+    return error_list
 
 
 def binary_matrix(r, row, col):
     tf = np.array([1, 0])
     bm = np.random.choice(tf, size=(row, col), p=[r, 1.0 - r])
     return bm
+
+def save_metrics(new_row, log_dir, file_name):
+    with open (log_dir + file_name + ".csv",'a') as file:
+        writer = csv.writer(file, delimiter=',')
+        writer.writerow(new_row)
