@@ -7,8 +7,6 @@ from model.arima import Arima
 
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.allow_growth = True
-session = tf.compat.v1.Session(config=config)
-
 
 def print_arima_info(mode, config):
     print('----------------------- INFO -----------------------')
@@ -47,8 +45,10 @@ def print_arima_info(mode, config):
     if infor_correct != 'y' and infor_correct != 'yes':
         raise RuntimeError('Information is not correct!')
 
+def evaluate_arima(config):
+    pass
 
-def test_lstm_ed(config):
+def test_arima(config):
     # with tf.device('/device:GPU:{}'.format(config['gpu'])):
     model = Arima(**config)
     model.test()
@@ -69,20 +69,9 @@ if __name__ == '__main__':
 
     print_arima_info(args.mode, config)
 
-    if args.mode == 'train':
-        if config['model']['model_type'] == 'ed':
-            train_lstm_ed(config)
-        else:
-            raise RuntimeError('|--- Model should be lstm or ed (encoder-decoder)!')
+    if args.mode == 'test':
+        test_arima(config)
     elif args.mode == 'evaluate' or args.mode == 'evaluation':
-
-        if config['model']['model_type'] == 'ed':
-            evaluate_lstm_ed(config)
-        else:
-            raise RuntimeError('|--- Model should be lstm or ed (encoder-decoder)!')
-
-    elif args.mode == "test":
-        test_lstm_ed(config)
-
+        evaluate_arima(config)
     else:
         raise RuntimeError("Mode needs to be train/evaluate/test!")

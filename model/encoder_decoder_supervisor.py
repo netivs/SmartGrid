@@ -1,3 +1,6 @@
+import os
+import time
+
 import keras.callbacks as keras_callbacks
 import pandas as pd
 import numpy as np
@@ -185,6 +188,7 @@ class EncoderDecoder():
                 yaml.dump(config, f, default_flow_style=False)
 
     def evaluate(self):
+        #todo:
         pass
 
     def test(self):
