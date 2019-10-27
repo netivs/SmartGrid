@@ -5,9 +5,9 @@ import tensorflow as tf
 import yaml
 from model.encoder_decoder_supervisor import EncoderDecoder
 
-config = tf.compat.v1.ConfigProto()
+config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-session = tf.compat.v1.Session(config=config)
+session = tf.Session(config=config)
 
 
 def print_lstm_info(mode, config):

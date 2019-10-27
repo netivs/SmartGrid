@@ -5,7 +5,7 @@ import tensorflow as tf
 import yaml
 from model.arima import Arima
 
-config = tf.compat.v1.ConfigProto()
+config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 
 def print_arima_info(mode, config):

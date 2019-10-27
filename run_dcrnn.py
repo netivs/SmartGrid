@@ -5,8 +5,9 @@ import tensorflow as tf
 import yaml
 from model.dcrnn_supervisor import DCRNNSupervisor
 
-config = tf.compat.v1.ConfigProto()
+config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
+session = tf.Session(config=config)
 
 def print_dcrnn_info(mode, config):
     print('----------------------- INFO -----------------------')
@@ -65,22 +66,22 @@ def print_dcrnn_info(mode, config):
         raise RuntimeError('Information is not correct!')
 
 
-def train_dcrnn(config):
+def train_dcrnn(adj_mx, config):
     # with tf.device('/device:GPU:{}'.format(config['gpu'])):
     dcrnn_supervisor = DCRNNSupervisor(adj_mx=adj_mx, **config)
-    dcrnn_supervisor.train()
+    dcrnn_supervisor.train(sess = session)
 
 
-def test_dcrnn(config):
+def test_dcrnn(adj_mx, config):
     # with tf.device('/device:GPU:{}'.format(config['gpu'])):
     dcrnn_supervisor = DCRNNSupervisor(adj_mx=adj_mx, **config)
-    dcrnn_supervisor.test()
+    dcrnn_supervisor.test(sess = session)
 
 
-def evaluate_dcrnn(config):
+def evaluate_dcrnn(adj_mx, config):
     # with tf.device('/device:GPU:{}'.format(config['gpu'])):
     dcrnn_supervisor = DCRNNSupervisor(adj_mx=adj_mx, **config)
-    dcrnn_supervisor.evaluate()
+    dcrnn_supervisor.evaluate(sess = session)
 
 
 if __name__ == '__main__':
@@ -97,15 +98,17 @@ if __name__ == '__main__':
     with open(args.config_file) as f:
         config = yaml.load(f)
 
+    graph_pkl_filename = config['data'].get('graph_pkl_filename')
+    _, _, adj_mx = load_graph_data(graph_pkl_filename)
     print_dcrnn_info(args.mode, config)
 
     if args.mode == 'train':
-        train_dcrnn(config)
+        train_dcrnn(adj_mx, config)
 
     elif args.mode == 'evaluate' or args.mode == 'evaluation':
-        evaluate_dcrnn(config)
+        evaluate_dcrnn(adj_mx, config)
 
     elif args.mode == "test":
-        test_dcrnn(config)
+        test_dcrnn(adj_mx, config)
     else:
         raise RuntimeError("Mode needs to be train/evaluate/test!")
