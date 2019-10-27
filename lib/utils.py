@@ -7,7 +7,7 @@ import pickle
 import sys
 import tensorflow as tf
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from utils.constant import LOAD_AREAS
+from lib.constant import LOAD_AREAS
 
 class StandardScaler:
     """

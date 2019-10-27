@@ -1,9 +1,9 @@
 from sklearn import preprocessing
-from utils.utils import binary_matrix
+from lib.utils import binary_matrix
 import random
 import numpy as np
 from numpy import array
-from utils.constant import LOAD_AREAS
+from lib.constant import LOAD_AREAS
 
 def prepare_data(data, l=24, r=0.8, h=1, p=0.6):
     row_data = data.shape[0]
