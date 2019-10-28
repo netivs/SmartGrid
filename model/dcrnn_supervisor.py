@@ -52,7 +52,7 @@ class DCRNNSupervisor(object):
 
         with tf.name_scope('Test'):
             with tf.variable_scope('DCRNN', reuse=True):
-                self._test_model = DCRNNModel(is_training=False, scaler=scaler,
+                self._eval_model = DCRNNModel(is_training=False, scaler=scaler,
                                               batch_size=self._data_kwargs['test_batch_size'],
                                               adj_mx=adj_mx, **self._model_kwargs)
 
@@ -220,7 +220,7 @@ class DCRNNSupervisor(object):
 
             global_step = sess.run(tf.train.get_or_create_global_step())
             # Compute validation error.
-            val_results = self.run_epoch_generator(sess, self._test_model,
+            val_results = self.run_epoch_generator(sess, self._eval_model,
                                                    self._data['val_loader'].get_iterator(),
                                                    training=False)
             val_loss, val_mae = np.asscalar(val_results['loss']), np.asscalar(val_results['mae'])
@@ -256,21 +256,21 @@ class DCRNNSupervisor(object):
 
     def evaluate(self, sess, **kwargs):
         global_step = sess.run(tf.train.get_or_create_global_step())
-        test_results = self.run_epoch_generator(sess, self._test_model,
-                                                self._data['test_loader'].get_iterator(),
+        eval_results = self.run_epoch_generator(sess, self._eval_model,
+                                                self._data['eval_loader'].get_iterator(),
                                                 return_output=True,
                                                 training=False)
 
         # y_preds:  a list of (batch_size, horizon, num_nodes, output_dim)
-        test_loss, y_preds = test_results['loss'], test_results['outputs']
-        utils.add_simple_summary(self._writer, ['loss/test_loss'], [test_loss], global_step=global_step)
+        eval_loss, y_preds = eval_results['loss'], eval_results['outputs']
+        utils.add_simple_summary(self._writer, ['loss/eval_loss'], [eval_loss], global_step=global_step)
 
         y_preds = np.concatenate(y_preds, axis=0)
         scaler = self._data['scaler']
         predictions = []
         y_truths = []
-        for horizon_i in range(self._data['y_test'].shape[1]):
-            y_truth = scaler.inverse_transform(self._data['y_test'][:, horizon_i, :, 0])
+        for horizon_i in range(self._data['y_eval'].shape[1]):
+            y_truth = scaler.inverse_transform(self._data['y_eval'][:, horizon_i, :, 0])
             y_truths.append(y_truth)
 
             y_pred = scaler.inverse_transform(y_preds[:y_truth.shape[0], horizon_i, :, 0])

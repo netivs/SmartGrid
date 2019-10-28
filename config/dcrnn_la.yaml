@@ -5,26 +5,25 @@ log_level: INFO
 gpu: 0
 data:
   batch_size: 64
-  raw_dataset_dir: data/data_load_area.npz
-  output_dir: data/dcrnn
+  raw_dataset_dir: data/METR-LA
   test_batch_size: 64
   val_batch_size: 64
   len_data: 0.6
-  graph_pkl_filename: data/adj_mx.pkl
+  graph_pkl_filename: data/sensor_graph/adj_mx.pkl
 
 model:
-  seq_len: 24
-  horizon: 2
-  input_dim: 1
-  verified_percentage: 0.8
-  l1_decay: 0
-  num_nodes: 29
-  output_dim: 1
-  rnn_units: 64 
   cl_decay_steps: 2000
-  num_rnn_layers: 2
   filter_type: dual_random_walk
+  horizon: 12
+  input_dim: 2
+  l1_decay: 0
   max_diffusion_step: 2
+  num_nodes: 207
+  num_rnn_layers: 2
+  output_dim: 1
+  verified_percentage: 0.8
+  rnn_units: 64
+  seq_len: 12
   use_curriculum_learning: true
 
 train:
@@ -42,6 +41,3 @@ train:
   patience: 50
   steps: [20, 30, 40, 50]
   test_every_n_epochs: 10
-
-test:
-  run_times: 10

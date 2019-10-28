@@ -1,14 +1,16 @@
 import logging
-import numpy as np
 import os
 import csv
 import random
 import pandas as pd
 import pickle
 import sys
+import numpy as np
 import tensorflow as tf
+import scipy.sparse as sp
+
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from lib.constant import LOAD_AREAS
+from scipy.sparse import linalg
 
 class StandardScaler:
     """
@@ -232,7 +234,7 @@ def add_simple_summary(writer, names, values, global_step):
     """
     for name, value in zip(names, values):
         summary = tf.Summary()
-        summary_value = summary.value.add()
+        summary_value = summary.Value.add()
         summary_value.simple_value = value
         summary_value.tag = name
         writer.add_summary(summary, global_step)
@@ -311,23 +313,82 @@ def get_total_trainable_parameter_size():
         total_parameters += np.product([x.value for x in variable.get_shape()])
     return total_parameters
 
+def create_data_dcrnn(data, seq_len, r, input_dim, horizon):
+    K = data.shape[1]
+    T = data.shape[0]
+    bm = binary_matrix(r, T, K)
+    stdev_mx = list()
+    x, y = list(), list()
+    for col in range(K):
+        data_load_area = data[:, col]
+        # x' - standard deviation for the training set
+        x_stdev = np.std(data_load_area)
+        stdev_mx.append(x_stdev)
 
-def load_dataset_dcrnn(test_batch_size=None, **data_kwargs):
-    dataset_dir = data_kwargs.get('raw_dataset_dir')
-    batch_size = data_kwargs.get('batch_size')
+    # convert to array
+    stdev_mx_arr = np.asarray(stdev_mx)
+    stdev_mx_arr = np.insert(stdev_mx_arr, [0]*K, stdev_mx_arr[0], axis=0)
+    print(stdev_mx_arr.shape)
+    for i in range (T - seq_len - horizon):
+        x = data[i:i+seq_len, :]
+        y = data[i+seq_len:i+seq_len+horizon, :]
+        _bm = bm[i+seq_len+horizon, :]
+        _tmp_x_y = np.vstack(x,y)
+        updated_x_y = stdev_mx_arr * (1.0 - _bm) + _tmp_x_y * _bm
+        x = updated_x_y[:seq_len, :]
+        y = updated_x_y[-horizon:, :]
+
+        _x = x.reshape(x.shape, input_dim)
+        _y = y.reshape(y.shape, input_dim)
+        print(_x.shape)
+        print(_y.shape)
+        x.append(_x)
+        y.append(_y)
+    x = np.stack(x, axis=0)
+    y = np.stack(y, axis=0)
+    return x, y
+
+def load_dataset_dcrnn(test_batch_size=None, **kwargs):
+    batch_size = kwargs['data'].get('batch_size')
+    raw_dataset_dir = kwargs['data'].get('raw_dataset_dir')
+    input_dim = kwargs['model'].get('input_dim')
+    horizon = kwargs['model'].get('horizon')
+    seq_len = kwargs['model'].get('seq_len')
+    r = kwargs['model'].get('verified_percentage')
+    p = kwargs['data'].get('len_data')
+    raw_data = np.load(raw_dataset_dir)['data']
+
+    print('|--- Splitting train-test set.')
+    train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
+    print('|--- Normalizing the train set.')
     data = {}
-    for category in ['train', 'val', 'test']:
-        cat_data = np.load(os.path.join(dataset_dir, category + '.npz'))
-        data['x_' + category] = cat_data['x']
-        data['y_' + category] = cat_data['y']
-    scaler = StandardScaler(mean=data['x_train'][..., 0].mean(), std=data['x_train'][..., 0].std())
-    # Data format
-    for category in ['train', 'val', 'test']:
-        data['x_' + category][..., 0] = scaler.transform(data['x_' + category][..., 0])
-        data['y_' + category][..., 0] = scaler.transform(data['y_' + category][..., 0])
+    scaler = StandardScaler(mean=train_data2d.mean(), std=train_data2d.std())
+    train_data2d_norm = scaler.transform(train_data2d)
+    valid_data2d_norm = scaler.transform(valid_data2d)
+    test_data2d_norm = scaler.transform(test_data2d)
+
+    data['test_data_norm'] = test_data2d_norm
+
+    x_train, y_train = create_data_dcrnn(train_data2d_norm,
+                                                seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
+    x_val, y_val = create_data_dcrnn(valid_data2d_norm,
+                                                seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
+    x_eval, y_eval = create_data_dcrnn(test_data2d_norm,
+                                                seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
+
+    for cat in ["train", "val", "eval"]:
+        _x, _y = locals()["x_" + cat], locals()["y_" + cat]
+        print(cat, "x: ", _x.shape, "y:", _y.shape)
+        data['x_' + cat] = _x
+        data['y_' + cat] = _y
+        np.savez_compressed(
+            os.path.join(kwargs['data'].get('output_dir'), "%s.npz" % cat),
+            x=_x,
+            y=_y,
+        )
     data['train_loader'] = DataLoader(data['x_train'], data['y_train'], batch_size, shuffle=True)
     data['val_loader'] = DataLoader(data['x_val'], data['y_val'], test_batch_size, shuffle=False)
-    data['test_loader'] = DataLoader(data['x_test'], data['y_test'], test_batch_size, shuffle=False)
+    data['eval_loader'] = DataLoader(data['x_eval'], data['y_eval'], test_batch_size, shuffle=False)
     data['scaler'] = scaler
 
     return data
