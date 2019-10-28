@@ -64,7 +64,7 @@ class Arima():
             size = int(len(data) * self._len_data)
             train, test = data[0:size], data[size:]
             history = [x for x in train]
-            histotry = history[-l:]
+            history = history[-l:]
             for t in range(0, len(test)-h, h):
                 # Only use l time-steps as inputs
                 model = auto_arima(np.array(history[-l:]), error_action = 'ignore')
@@ -83,7 +83,7 @@ class Arima():
 
         # save metrics to log
         error_list = utils.cal_error(gt.flatten(), predictions.flatten())
-        utils.save_metrics(error_list, self._log_dir, self._alg_name + "_metrics")
+        utils.save_metrics(error_list, self._log_dir, self._alg_name)
 
     def test(self):
         for _ in range(self._run_times):

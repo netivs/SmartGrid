@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import os
+import csv
 import random
 import pandas as pd
 import pickle
@@ -167,12 +168,19 @@ def cal_error(test_arr, prediction_arr):
     y_true, y_pred = np.array(test_arr), np.array(prediction_arr)
     error_mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
     print('MAPE: %.3f' % error_mape)
+    error_list = [error_mae, error_rmse, error_mape]
+    return error_list
 
 
 def binary_matrix(r, row, col):
     tf = np.array([1, 0])
     bm = np.random.choice(tf, size=(row, col), p=[r, 1.0 - r])
     return bm
+
+def save_metrics(error_list, log_dir, alg):
+    with open(log_dir + alg + "_metrics.csv", 'a') as file:
+        writer = csv.writer(file)
+        writer.writerow(error_list)
 
 class DataLoader(object):
     def __init__(self, xs, ys, batch_size, pad_with_last_sample=True, shuffle=False):
@@ -212,23 +220,6 @@ class DataLoader(object):
                 self.current_ind += 1
 
         return _wrapper()
-
-
-class StandardScaler:
-    """
-    Standard the input
-    """
-
-    def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
-
-    def transform(self, data):
-        return (data - self.mean) / self.std
-
-    def inverse_transform(self, data):
-        return (data * self.std) + self.mean
-
 
 def add_simple_summary(writer, names, values, global_step):
     """
@@ -309,25 +300,6 @@ def config_logging(log_dir, log_filename='info.log', level=logging.INFO):
     console_handler.setLevel(level=level)
     logging.basicConfig(handlers=[file_handler, console_handler], level=level)
 
-
-def get_logger(log_dir, name, log_filename='info.log', level=logging.INFO):
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    # Add file handler and stdout handler
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler = logging.FileHandler(os.path.join(log_dir, log_filename))
-    file_handler.setFormatter(formatter)
-    # Add console handler.
-    console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(console_formatter)
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-    # Add google cloud log handler
-    logger.info('Log directory: %s', log_dir)
-    return logger
-
-
 def get_total_trainable_parameter_size():
     """
     Calculates the total number of trainable parameters in the current graph.
@@ -359,21 +331,3 @@ def load_dataset_dcrnn(test_batch_size=None, **data_kwargs):
     data['scaler'] = scaler
 
     return data
-
-
-def load_graph_data(pkl_filename):
-    sensor_ids, sensor_id_to_ind, adj_mx = load_pickle(pkl_filename)
-    return sensor_ids, sensor_id_to_ind, adj_mx
-
-
-def load_pickle(pickle_file):
-    try:
-        with open(pickle_file, 'rb') as f:
-            pickle_data = pickle.load(f)
-    except UnicodeDecodeError as e:
-        with open(pickle_file, 'rb') as f:
-            pickle_data = pickle.load(f, encoding='latin1')
-    except Exception as e:
-        print('Unable to load data ', pickle_file, ':', e)
-        raise
-    return pickle_data

@@ -4,6 +4,7 @@ import sys
 import tensorflow as tf
 import yaml
 from model.dcrnn_supervisor import DCRNNSupervisor
+from lib import utils
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -74,8 +75,8 @@ def train_dcrnn(adj_mx, config):
 
 def test_dcrnn(adj_mx, config):
     # with tf.device('/device:GPU:{}'.format(config['gpu'])):
-    dcrnn_supervisor = DCRNNSupervisor(adj_mx=adj_mx, **config)
-    dcrnn_supervisor.test(sess = session)
+    # dcrnn_supervisor = DCRNNSupervisor(adj_mx=adj_mx, **config)
+    # dcrnn_supervisor.test(sess = session)
 
 
 def evaluate_dcrnn(adj_mx, config):
@@ -99,7 +100,7 @@ if __name__ == '__main__':
         config = yaml.load(f)
 
     graph_pkl_filename = config['data'].get('graph_pkl_filename')
-    _, _, adj_mx = load_graph_data(graph_pkl_filename)
+    _, _, adj_mx = utils.load_graph_data(graph_pkl_filename)
     print_dcrnn_info(args.mode, config)
 
     if args.mode == 'train':
