@@ -132,8 +132,8 @@ def load_dataset_lstm_ed(seq_len, horizon, input_dim, raw_dataset_dir, r, p, **k
 
 
 def load_graph_data(pkl_filename):
-    sensor_ids, sensor_id_to_ind, adj_mx = load_pickle(pkl_filename)
-    return sensor_ids, sensor_id_to_ind, adj_mx
+    adj_mx = load_pickle(pkl_filename)
+    return adj_mx
 
 
 def load_pickle(pickle_file):
@@ -205,6 +205,8 @@ class DataLoader(object):
         self.num_batch = int(self.size // self.batch_size)
         if shuffle:
             permutation = np.random.permutation(self.size)
+            print(xs.shape)
+            print(permutation)
             xs, ys = xs[permutation], ys[permutation]
         self.xs = xs
         self.ys = ys
@@ -233,8 +235,8 @@ def add_simple_summary(writer, names, values, global_step):
     :return:
     """
     for name, value in zip(names, values):
-        summary = tf.Summary()
-        summary_value = summary.Value.add()
+        summary = tf.compat.v1.Summary()
+        summary_value = summary.value.add()
         summary_value.simple_value = value
         summary_value.tag = name
         writer.add_summary(summary, global_step)
@@ -318,7 +320,7 @@ def create_data_dcrnn(data, seq_len, r, input_dim, horizon):
     T = data.shape[0]
     bm = binary_matrix(r, T, K)
     stdev_mx = list()
-    x, y = list(), list()
+    X, Y = list(), list()
     for col in range(K):
         data_load_area = data[:, col]
         # x' - standard deviation for the training set
@@ -326,27 +328,24 @@ def create_data_dcrnn(data, seq_len, r, input_dim, horizon):
         stdev_mx.append(x_stdev)
 
     # convert to array
-    stdev_mx_arr = np.asarray(stdev_mx)
-    stdev_mx_arr = np.insert(stdev_mx_arr, [0]*K, stdev_mx_arr[0], axis=0)
-    print(stdev_mx_arr.shape)
+    stdev_mx_arr = np.asarray(stdev_mx).reshape(1,-1)
+    stdev_mx_arr = np.insert(stdev_mx_arr, [0]*(seq_len+horizon-1), stdev_mx_arr[0], axis=0)
     for i in range (T - seq_len - horizon):
         x = data[i:i+seq_len, :]
         y = data[i+seq_len:i+seq_len+horizon, :]
         _bm = bm[i+seq_len+horizon, :]
-        _tmp_x_y = np.vstack(x,y)
+        _tmp_x_y = np.vstack((x,y))
         updated_x_y = stdev_mx_arr * (1.0 - _bm) + _tmp_x_y * _bm
         x = updated_x_y[:seq_len, :]
         y = updated_x_y[-horizon:, :]
 
-        _x = x.reshape(x.shape, input_dim)
-        _y = y.reshape(y.shape, input_dim)
-        print(_x.shape)
-        print(_y.shape)
-        x.append(_x)
-        y.append(_y)
-    x = np.stack(x, axis=0)
-    y = np.stack(y, axis=0)
-    return x, y
+        _x = np.reshape(x, x.shape + (input_dim,))
+        _y = np.reshape(y, y.shape + (input_dim,))
+        X.append(_x)
+        Y.append(_y)
+    X = np.stack(X, axis=0)
+    Y = np.stack(Y, axis=0)
+    return X, Y
 
 def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     batch_size = kwargs['data'].get('batch_size')

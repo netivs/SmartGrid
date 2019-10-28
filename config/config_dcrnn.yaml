@@ -10,7 +10,7 @@ data:
   test_batch_size: 64
   val_batch_size: 64
   len_data: 0.6
-  graph_pkl_filename: data/adj_mx.pkl
+  graph_pkl_filename: data/dcrnn/adj_mx.pkl
 
 model:
   seq_len: 24
