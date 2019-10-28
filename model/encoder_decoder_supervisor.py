@@ -57,7 +57,7 @@ class EncoderDecoder():
         self._input_shape = (self._seq_len, self._input_dim)
         self._output_dim = self._model_kwargs.get('output_dim')
         self._nodes = self._model_kwargs.get('num_nodes')
-        self._n_rnn_layers = self._model_kwargs.get('n_rnn_layers')
+        self._num_rnn_layers = self._model_kwargs.get('num_rnn_layers')
 
         # Train's args
         self._drop_out = self._train_kwargs.get('dropout')
@@ -98,10 +98,10 @@ class EncoderDecoder():
         log_dir = kwargs['train'].get('log_dir')
         if log_dir is None:
             batch_size = kwargs['data'].get('batch_size')
-            n_rnn_layers = kwargs['model'].get('n_rnn_layers')
+            num_rnn_layers = kwargs['model'].get('num_rnn_layers')
             rnn_units = kwargs['model'].get('rnn_units')
             structure = '-'.join(
-                ['%d' % rnn_units for _ in range(n_rnn_layers)])
+                ['%d' % rnn_units for _ in range(num_rnn_layers)])
             horizon = kwargs['model'].get('horizon')
 
             model_type = kwargs['model'].get('model_type')

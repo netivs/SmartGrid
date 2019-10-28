@@ -34,7 +34,7 @@ def print_dcrnn_info(mode, config):
     print('|--- NUM_NODES:\t{}'.format(config['model']['num_nodes']))
     print('|--- OUTPUT_DIMS:\t{}'.format(config['model']['output_dim']))
     print('|--- RNN_UNITS:\t{}'.format(config['model']['rnn_units']))
-    print('|--- N_RNN_LAYERS:\t{}'.format(config['model']['n_rnn_layers']))
+    print('|--- NUM_RNN_LAYERS:\t{}'.format(config['model']['num_rnn_layers']))
     print('|--- FILTER_TYPE:\t{}'.format(config['model']['filter_type']))
     print('|--- MAX_DIFFUSION_STEP:\t{}'.format(config['model']['max_diffusion_step']))
     print('|--- USE_CURRICULUMN_LEARNING:\t{}'.format(config['model']['use_curriculum_learning']))
@@ -77,6 +77,7 @@ def test_dcrnn(adj_mx, config):
     # with tf.device('/device:GPU:{}'.format(config['gpu'])):
     # dcrnn_supervisor = DCRNNSupervisor(adj_mx=adj_mx, **config)
     # dcrnn_supervisor.test(sess = session)
+    pass
 
 
 def evaluate_dcrnn(adj_mx, config):

@@ -120,7 +120,7 @@ def load_dataset_lstm_ed(seq_len, horizon, input_dim, raw_dataset_dir, r, p, **k
     for cat in ["train", "val", "eval"]:
         e_x, d_x, d_y = locals()["encoder_input_" + cat], locals()[
             "decoder_input_" + cat], locals()["decoder_target_" + cat]
-
+        print(cat, "e_x: ", e_x.shape, "d_x: ", d_x.shape, "d_y: ", d_y.shape)
         data["encoder_input_" + cat] = e_x
         data["decoder_input_" + cat] = d_x
         data["decoder_target_" + cat] = d_y

@@ -2,12 +2,14 @@
 alg: dcrnn
 base_dir: log/dcrnn
 log_level: INFO
+gpu: 0
 data:
   batch_size: 64
-  dataset_dir: data/data_load_area.npz
+  dataset_dir: data/dcrnn
   test_batch_size: 64
   val_batch_size: 64
   len_data: 0.6
+  graph_pkl_filename: data/adj_mx.pkl
 
 model:
   seq_len: 24
@@ -19,7 +21,7 @@ model:
   output_dim: 1
   rnn_units: 64 
   cl_decay_steps: 2000
-  n_rnn_layers: 2
+  num_rnn_layers: 2
   filter_type: dual_random_walk
   max_diffusion_step: 2
   use_curriculum_learning: true
