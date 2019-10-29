@@ -60,7 +60,7 @@ class Arima():
         
         # run predict for 29 nodes
         for column_load_area in range(self._nodes):
-            data = self._data[column_load_area]
+            data = self._data[:, column_load_area]
             size = int(len(data) * self._len_data)
             train, test = data[0:size], data[size:]
             history = [x for x in train]
