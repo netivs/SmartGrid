@@ -7,6 +7,7 @@ from model.arima import Arima
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
+session = tf.Session(config=config)
 
 def print_arima_info(mode, config):
     print('----------------------- INFO -----------------------')

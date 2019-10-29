@@ -3,9 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-
 from tensorflow.contrib import legacy_seq2seq
-
 from lib.metrics import masked_mae_loss
 from model.dcrnn_cell import DCGRUCell
 
@@ -24,7 +22,7 @@ class DCRNNModel(object):
         cl_decay_steps = int(model_kwargs.get('cl_decay_steps', 1000))
         filter_type = model_kwargs.get('filter_type', 'laplacian')
         horizon = int(model_kwargs.get('horizon', 1))
-        max_grad_norm = float(model_kwargs.get('max_grad_norm', 5.0))
+        # max_grad_norm = float(model_kwargs.get('max_grad_norm', 5.0))
         num_nodes = int(model_kwargs.get('num_nodes', 1))
         num_rnn_layers = int(model_kwargs.get('num_rnn_layers', 1))
         rnn_units = int(model_kwargs.get('rnn_units'))
@@ -50,7 +48,7 @@ class DCRNNModel(object):
         encoding_cells = tf.contrib.rnn.MultiRNNCell(encoding_cells, state_is_tuple=True)
         decoding_cells = tf.contrib.rnn.MultiRNNCell(decoding_cells, state_is_tuple=True)
 
-        global_step = tf.train.get_or_create_global_step()
+        global_step = tf.train.get_or_create_global_step(graph=None)
         # Outputs: (batch_size, timesteps, num_nodes, output_dim)
         with tf.variable_scope('DCRNN_SEQ'):
             inputs = tf.unstack(tf.reshape(self._inputs, (batch_size, seq_len, num_nodes * input_dim)), axis=1)

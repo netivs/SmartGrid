@@ -119,7 +119,7 @@ class EncoderDecoder():
         # Model
         encoder_inputs = Input(shape=(None, self._input_dim))
         encoder = LSTM(self._rnn_units, return_state=True)
-        encoder_outputs, state_h, state_c = encoder(encoder_inputs)
+        _, state_h, state_c = encoder(encoder_inputs)
         # We discard `encoder_outputs` and only keep the states.
         encoder_states = [state_h, state_c]
 

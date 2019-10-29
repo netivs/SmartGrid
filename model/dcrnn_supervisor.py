@@ -29,6 +29,7 @@ class DCRNNSupervisor(object):
         self._train_kwargs = kwargs.get('train')
 
         # logging.
+        self._alg = self._kwargs.get('alg')
         self._log_dir = self._get_log_dir(kwargs)
         log_level = self._kwargs.get('log_level', 'INFO')
         self._logger = utils.get_logger(self._log_dir, __name__, 'info.log', level=log_level)
@@ -280,10 +281,14 @@ class DCRNNSupervisor(object):
             mape = metrics.masked_mape_np(y_pred, y_truth, null_val=0)
             rmse = metrics.masked_rmse_np(y_pred, y_truth, null_val=0)
             self._logger.info(
-                "Horizon {:02d}, MAE: {:.2f}, MAPE: {:.4f}, RMSE: {:.2f}".format(
-                    horizon_i + 1, mae, mape, rmse
+                "Horizon {:02d}, MAE: {:.2f}, RMSE: {:.2f}, MAPE: {:.4f}".format(
+                    horizon_i + 1, mae, rmse, mape
                 )
             )
+            # save metrics to log
+            error_list = [mae, rmse, mape]
+            utils.save_metrics(error_list, self._log_dir, self._alg)
+
             utils.add_simple_summary(self._writer,
                                      ['%s_%d' % (item, horizon_i + 1) for item in
                                       ['metric/rmse', 'metric/mape', 'metric/mae']],
