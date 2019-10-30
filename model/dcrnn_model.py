@@ -47,7 +47,8 @@ class DCRNNModel(object):
         decoding_cells = [cell] * (num_rnn_layers - 1) + [cell_with_projection]
         encoding_cells = tf.contrib.rnn.MultiRNNCell(encoding_cells, state_is_tuple=True)
         decoding_cells = tf.contrib.rnn.MultiRNNCell(decoding_cells, state_is_tuple=True)
-
+        
+        global_step = tf.train.get_or_create_global_step()
         # Outputs: (batch_size, timesteps, num_nodes, output_dim)
         with tf.variable_scope('DCRNN_SEQ'):
             inputs = tf.unstack(tf.reshape(self._inputs, (batch_size, seq_len, num_nodes * input_dim)), axis=1)
@@ -60,7 +61,6 @@ class DCRNNModel(object):
                     # Return either the model's prediction or the previous ground truth in training.
                     if use_curriculum_learning:
                         c = tf.random_uniform((), minval=0, maxval=1.)
-                        global_step = tf.train.get_or_create_global_step(graph=None)
                         threshold = self._compute_sampling_threshold(global_step, cl_decay_steps)
                         result = tf.cond(tf.less(c, threshold), lambda: labels[i], lambda: prev)
                     else:

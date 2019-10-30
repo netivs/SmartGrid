@@ -205,8 +205,8 @@ class EncoderDecoder():
             source2d = pd[i:i+l]
             source3d = source2d.reshape(self._nodes, l, self._input_dim)
             yhats = self._predict(source3d)
-            predictions.append(scaler.inverse_transform(yhats))
-            gt.append(scaler.inverse_transform(data_test[i+l:i+l+h]))
+            predictions.append(yhats)
+            gt.append(data_test[i+l:i+l+h])
             # update y
             _bm = bm[i+l:i+l+h]
             _gt = data_test[i+l:i+l+h].copy()
@@ -215,6 +215,9 @@ class EncoderDecoder():
             
         predictions = np.stack(predictions, axis=0)
         gt = np.stack(gt, axis=0)
+        predictions = scaler.inverse_transform(predictions)
+        gt = scaler.inverse_transform(gt)
+        print(predictions.shape, gt.shape)
 
         # save bm and pd to log dir
         np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
