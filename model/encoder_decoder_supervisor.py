@@ -202,16 +202,15 @@ class EncoderDecoder():
         pd[:l] = data_test[:l]
         predictions, gt = list(), list()
         for i in range(0, T-l-h, h):
-            source2d = pd[i:i+l]
+            source2d = pd[i:i+l].copy()
             source3d = source2d.reshape(self._nodes, l, self._input_dim)
             yhats = self._predict(source3d)
-            predictions.append(yhats)
+            predictions.append(yhats.copy())
             gt.append(data_test[i+l:i+l+h])
             # update y
-            _bm = bm[i+l:i+l+h]
+            _bm = bm[i+l:i+l+h].copy()
             _gt = data_test[i+l:i+l+h].copy()
-            updated_y = yhats * (1.0 - _bm) + _gt * _bm
-            pd[i+l:i+l+h] = updated_y
+            pd[i+l:i+l+h] = yhats * (1.0 - _bm) + _gt * _bm
             
         predictions = np.stack(predictions, axis=0)
         gt = np.stack(gt, axis=0)

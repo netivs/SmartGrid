@@ -69,23 +69,13 @@ def create_data_lstm_ed(data, seq_len, r, input_dim=1, horizon=1):
         # x' - standard deviation for the training set
         x_stdev = np.std(data_load_area)
         for i in range (T - seq_len - horizon):
-            x_en = data_load_area[i:i+seq_len]
-            x_de = data_load_area[i+seq_len-1:i+seq_len+horizon-1]
-            y_de = data_load_area[i+seq_len:i+seq_len+horizon]
+            x_en = data_load_area[i:i+seq_len].copy()
+            x_de = data_load_area[i+seq_len-1:i+seq_len+horizon-1].copy()
+            y_de = data_load_area[i+seq_len:i+seq_len+horizon].copy()
             for row in range(len(x_en)):
-                if bm[row+i][col] == 1:
+                if bm[row+i][col] == 0:
                     tmp = x_en[row]
                     x_en[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
-
-            for row in range(len(x_de)):
-                if bm[row+i+seq_len-1][col] == 1:
-                    tmp = x_de[row]
-                    x_de[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
-
-            for row in range(len(y_de)):
-                if bm[row+i+seq_len][col] == 1:
-                    tmp = y_de[row]
-                    y_de[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
 
             x_en = x_en.reshape(seq_len, input_dim)
             x_de = x_de.reshape(horizon, input_dim)
