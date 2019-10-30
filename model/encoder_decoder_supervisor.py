@@ -206,7 +206,7 @@ class EncoderDecoder():
             input = np.zeros(shape=(self._nodes, l, self._input_dim))
             # input_dim = 2
             input[:, :, 0] = pd[i:i+l].T
-            input[:, :, 1] = bm[i:i+l].T
+            # input[:, :, 1] = bm[i:i+l].T
             yhats = self._predict(input)
             predictions.append(yhats.copy())
             gt.append(data_test[i+l:i+l+h])

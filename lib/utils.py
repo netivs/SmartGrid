@@ -84,7 +84,7 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
     for k in range(K):
         for i in range(T-seq_len-horizon):
             en_x[_idx, :, 0] = _data[i:i+seq_len, k]
-            en_x[_idx, :, 1] = bm[i:i+seq_len, k]
+            # en_x[_idx, :, 1] = bm[i:i+seq_len, k]
             de_x[_idx, :, 0] = data[i+seq_len-1:i+seq_len+horizon-1, k]
             de_y[_idx, :, 0] = data[i+seq_len:i+seq_len+horizon, k]
             _idx +=1
