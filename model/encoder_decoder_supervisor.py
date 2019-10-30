@@ -203,9 +203,11 @@ class EncoderDecoder():
         pd[:l] = data_test[:l]
         predictions, gt = list(), list()
         for i in range(0, T-l-h, h):
-            source2d = pd[i:i+l].copy()
-            source3d = source2d.reshape(self._nodes, l, self._input_dim)
-            yhats = self._predict(source3d)
+            input = np.zeros(shape=(self._nodes, l, self._input_dim))
+            # input_dim = 2
+            input[:, :, 0] = pd[i:i+l].T
+            input[:, :, 1] = bm[i:i+l].T
+            yhats = self._predict(input)
             predictions.append(yhats.copy())
             gt.append(data_test[i+l:i+l+h])
             # update y
@@ -227,11 +229,10 @@ class EncoderDecoder():
 
     def _predict(self, source):
         states_value = self.encoder_model.predict(source)
-
         # Generate empty target sequence of length 1.
-        target_seq = np.zeros((self._nodes, 1, self._input_dim))
+        target_seq = np.zeros((self._nodes, 1, self._output_dim))
         # Populate the first character of target sequence with the start character.
-        # target_seq[:, 0, 0] = source[-1]
+        target_seq[:, 0, 0] = source[:, -1, 0]
 
         yhat = np.zeros(shape=(self._horizon, self._nodes),
                         dtype='float32')
@@ -241,7 +242,7 @@ class EncoderDecoder():
             output_tokens = output_tokens[:, -1, 0]
             yhat[i] = output_tokens
 
-            target_seq = np.zeros((self._nodes, 1, self._input_dim))
+            target_seq = np.zeros((self._nodes, 1, self._output_dim))
             target_seq[:, 0, 0] = output_tokens
 
             # Update states
