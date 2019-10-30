@@ -192,6 +192,7 @@ class EncoderDecoder():
         pass
 
     def test(self):
+        scaler = self._data['scaler']
         data_test = self._data['test_data_norm']
         T = len(data_test)     
         bm = utils.binary_matrix(self._verified_percentage, len(data_test), self._nodes)
@@ -204,8 +205,8 @@ class EncoderDecoder():
             source2d = pd[i:i+l]
             source3d = source2d.reshape(self._nodes, l, self._input_dim)
             yhats = self._predict(source3d)
-            predictions.append(yhats)
-            gt.append(data_test[i+l:i+l+h])
+            predictions.append(scaler.inverse_transform(yhats))
+            gt.append(scaler.inverse_transform(data_test[i+l:i+l+h]))
             # update y
             _bm = bm[i+l:i+l+h]
             _gt = data_test[i+l:i+l+h].copy()
