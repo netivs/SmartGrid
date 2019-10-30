@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import time
+import warnings
 from lib import utils
 from pmdarima.arima import auto_arima
 
@@ -66,18 +67,20 @@ class Arima():
             history = [x for x in train]
             history = history[-l:]
             for t in range(0, len(test)-h, h):
-                # Only use l time-steps as inputs
-                model = auto_arima(np.array(history[-l:]), error_action = 'ignore')
-                yhat = model.predict(n_periods = h)
-                predictions.append(yhat)
-                gt.append(test[t:t+h])
-                for i in range(h):
-                    if bm[(t + size + i), column_load_area] == 1:
-                        # Update the data if verified == True
-                        history.append(test[t+i])
-                    else:
-                        # Otherwise use the predicted data
-                        history.append(yhat[i])
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore")
+                    # Only use l time-steps as inputs                    
+                    model = auto_arima(np.array(history[-l:]), error_action = 'ignore')
+                    yhat = model.predict(n_periods = h)
+                    predictions.append(yhat)
+                    gt.append(test[t:t+h])
+                    for i in range(h):
+                        if bm[(t + size + i), column_load_area] == 1:
+                            # Update the data if verified == True
+                            history.append(test[t+i])
+                        else:
+                            # Otherwise use the predicted data
+                            history.append(yhat[i])
         predictions = np.stack(predictions, axis=0)
         gt = np.stack(gt, axis=0)
 

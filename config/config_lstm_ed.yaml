@@ -24,7 +24,7 @@ train:
   dropout: 0
   epochs: 50000
   optimizer: adam
-  patience: 50
+  patience: 20
   continue_train: False
 test:
   run_times: 50

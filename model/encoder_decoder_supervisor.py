@@ -70,7 +70,8 @@ class EncoderDecoder():
         # Load data
         if self._model_type == 'ed' or self._model_type == 'encoder_decoder':
             self._data = utils.load_dataset_lstm_ed(seq_len=self._seq_len, horizon=self._horizon,
-                                                    input_dim=self._input_dim, raw_dataset_dir=self._raw_dataset_dir,
+                                                    input_dim=self._input_dim, output_dim=self._output_dim,
+                                                    raw_dataset_dir=self._raw_dataset_dir,
                                                     r=self._verified_percentage, p=self._len_data)
         else:
             raise RuntimeError("Model must be lstm or encoder_decoder")
