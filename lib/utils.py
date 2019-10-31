@@ -84,7 +84,7 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
     for k in range(K):
         for i in range(T-seq_len-horizon):
             en_x[_idx, :, 0] = _data[i:i+seq_len, k]
-            # en_x[_idx, :, 1] = bm[i:i+seq_len, k]
+            en_x[_idx, :, 1] = bm[i:i+seq_len, k]
             de_x[_idx, :, 0] = data[i+seq_len-1:i+seq_len+horizon-1, k]
             de_y[_idx, :, 0] = data[i+seq_len:i+seq_len+horizon, k]
             _idx +=1
@@ -329,7 +329,24 @@ def get_total_trainable_parameter_size():
         total_parameters += np.product([x.value for x in variable.get_shape()])
     return total_parameters
 
-def create_data_dcrnn(data, seq_len, r, input_dim, horizon):
+def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
+    K = data.shape[1]
+    T = data.shape[0]
+    bm = binary_matrix(r, T, K)
+    _data = data.copy()
+    _std = np.std(data)
+
+    _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
+
+    X = np.zeros(shape=((T-seq_len-horizon), seq_len, K, input_dim))
+    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, output_dim))
+
+    for i in range(T-seq_len-horizon):
+        X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
+        Y[i] = np.expand_dims(data[i+seq_len-1:i+seq_len+horizon-1], axis=2)
+    return X, Y
+
+def create_data_dcrnn(data, seq_len, r, input_dim, output_dim, horizon):
     K = data.shape[1]
     T = data.shape[0]
     bm = binary_matrix(r, T, K)
@@ -354,7 +371,7 @@ def create_data_dcrnn(data, seq_len, r, input_dim, horizon):
         y = updated_x_y[-horizon:, :]
 
         _x = np.reshape(x, x.shape + (input_dim,))
-        _y = np.reshape(y, y.shape + (input_dim,))
+        _y = np.reshape(y, y.shape + (output_dim,))
         X.append(_x)
         Y.append(_y)
     X = np.stack(X, axis=0)
@@ -365,6 +382,7 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     batch_size = kwargs['data'].get('batch_size')
     raw_dataset_dir = kwargs['data'].get('raw_dataset_dir')
     input_dim = kwargs['model'].get('input_dim')
+    output_dim = kwargs['model'].get('output_dim')
     horizon = kwargs['model'].get('horizon')
     seq_len = kwargs['model'].get('seq_len')
     r = kwargs['model'].get('verified_percentage')
@@ -382,12 +400,12 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
 
     data['test_data_norm'] = test_data2d_norm
 
-    x_train, y_train = create_data_dcrnn(train_data2d_norm,
-                                                seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
-    x_val, y_val = create_data_dcrnn(valid_data2d_norm,
-                                                seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
-    x_eval, y_eval = create_data_dcrnn(test_data2d_norm,
-                                                seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
+    x_train, y_train = create_data_dcrnn_ver_2(train_data2d_norm, seq_len=seq_len, r=r, 
+                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+    x_val, y_val = create_data_dcrnn_ver_2(valid_data2d_norm, seq_len=seq_len, r=r, 
+                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+    x_eval, y_eval = create_data_dcrnn_ver_2(test_data2d_norm, seq_len=seq_len, r=r, 
+                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
 
     for cat in ["train", "val", "eval"]:
         _x, _y = locals()["x_" + cat], locals()["y_" + cat]
