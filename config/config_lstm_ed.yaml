@@ -11,8 +11,8 @@ data:
   len_data: 0.6
 model:
   model_type: ed
-  seq_len: 24
-  horizon: 2
+  seq_len: 168
+  horizon: 24
   input_dim: 2
   verified_percentage: 0.8
   l1_decay: 0

@@ -305,5 +305,5 @@ class EncoderDecoder():
             plt.plot(preds[:, i], label='preds')
             plt.plot(gt[:, i], label='gt')
             plt.legend()
-            plt.show()
+            plt.savefig(self._log_dir + '[result_predict]series_{}.png'.format(str(i)))
             plt.close()

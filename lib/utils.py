@@ -135,9 +135,6 @@ def load_dataset_lstm_ed(seq_len, horizon, input_dim, output_dim, raw_dataset_di
     train_data2d_norm = scaler.transform(train_data2d)
     valid_data2d_norm = scaler.transform(valid_data2d)
     test_data2d_norm = scaler.transform(test_data2d)
-    # train_data2d_norm = train_data2d
-    # valid_data2d_norm = valid_data2d
-    # test_data2d_norm = test_data2d
 
     data['test_data_norm'] = test_data2d_norm.copy()
 
@@ -369,7 +366,7 @@ def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
     return X, Y
 
 
-def create_data_dcrnn(data, seq_len, r, input_dim, output, horizon):
+def create_data_dcrnn(data, seq_len, r, input_dim, output_dim, horizon):
     K = data.shape[1]
     T = data.shape[0]
     bm = binary_matrix(r, T, K)
@@ -417,7 +414,7 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
     print('|--- Normalizing the train set.')
     data = {}
-    scaler = StandardScaler(mean=train_data2d.mean(), std=train_data2d.std())
+    scaler = StandardScaler(train_data2d)
     train_data2d_norm = scaler.transform(train_data2d)
     valid_data2d_norm = scaler.transform(valid_data2d)
     test_data2d_norm = scaler.transform(test_data2d)
