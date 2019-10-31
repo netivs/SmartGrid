@@ -63,30 +63,23 @@ def create_data_lstm_ed(data, seq_len, r, input_dim=1, horizon=1):
     K = data.shape[1]
     T = data.shape[0]
     bm = binary_matrix(r, T, K)
-    e_x, d_x, d_y = list(), list(), list()
-    for col in range(K):
-        data_load_area = data[:, col]
-        # x' - standard deviation for the training set
-        x_stdev = np.std(data_load_area)
-        for i in range (T - seq_len - horizon):
-            x_en = data_load_area[i:i+seq_len].copy()
-            x_de = data_load_area[i+seq_len-1:i+seq_len+horizon-1].copy()
-            y_de = data_load_area[i+seq_len:i+seq_len+horizon].copy()
-            for row in range(len(x_en)):
-                if bm[row+i][col] == 0:
-                    tmp = x_en[row]
-                    x_en[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
+    _data = data.copy()
+    _std = np.std(data)
 
-            x_en = x_en.reshape(seq_len, input_dim)
-            x_de = x_de.reshape(horizon, input_dim)
-            y_de = y_de.reshape(horizon, input_dim)
-            e_x.append(x_en)
-            d_x.append(x_de)
-            d_y.append(y_de)
-    e_x = np.stack(e_x, axis=0)
-    d_x = np.stack(d_x, axis=0)
-    d_y = np.stack(d_y, axis=0)
-    return e_x, d_x, d_y
+    _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
+
+    en_x = np.zeros(shape=((T - seq_len - horizon)*K, seq_len, input_dim))
+    de_x = np.zeros(shape=((T - seq_len - horizon)*K, horizon, 1))
+    de_y = np.zeros(shape=((T - seq_len - horizon)*K, horizon, 1))
+
+    for k in range(K):
+        for i in range (T - seq_len - horizon):
+            en_x[i] = np.expand_dims(_data[i:i+seq_len, k], axis=2)
+            de_x[i] = np.expand_dims(data[i+seq_len-1:i+seq_len+horizon-1, k], axis=2)
+            de_y[i] = np.expand_dims(data[i+seq_len:i+seq_len+horizon, k], axis=2)
+
+    return en_x, de_x, de_y
+
 
 def load_dataset_lstm_ed(seq_len, horizon, input_dim, raw_dataset_dir, r, p, **kwargs):
     raw_data = np.load(raw_dataset_dir)['data']
