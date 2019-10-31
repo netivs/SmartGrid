@@ -2,16 +2,15 @@ import os
 import time
 
 import keras.callbacks as keras_callbacks
-import pandas as pd
 import numpy as np
-import os
-from numpy import array
-import time
+import pandas as pd
 import yaml
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import LSTM, Dense, Input
 from keras.models import Model
 from keras.utils import plot_model
+from tqdm import tqdm
+
 from lib import utils
 
 
@@ -106,10 +105,11 @@ class EncoderDecoder():
             horizon = kwargs['model'].get('horizon')
 
             model_type = kwargs['model'].get('model_type')
+            verified_percentage = kwargs['model'].get('verified_percentage')
 
-            run_id = '%s_%d_%s_%d/' % (
+            run_id = '%s_%d_%s_%d_%g/' % (
                 model_type, horizon,
-                structure, batch_size)
+                structure, batch_size, verified_percentage)
             base_dir = kwargs.get('base_dir')
             log_dir = os.path.join(base_dir, run_id)
         if not os.path.exists(log_dir):
@@ -143,7 +143,7 @@ class EncoderDecoder():
         if is_training:
             return model
         else:
-            self._logger.info("|--- Load model from: {}".format(self._log_dir))
+            self._logger.info("Load model from: {}".format(self._log_dir))
             model.load_weights(self._log_dir + 'best_model.hdf5')
             model.compile(optimizer='adam', loss='mse', metrics=['mse', 'mae'])
 
@@ -189,65 +189,76 @@ class EncoderDecoder():
                 yaml.dump(config, f, default_flow_style=False)
 
     def evaluate(self):
-        #todo:
+        # todo:
         pass
 
     def test(self):
         scaler = self._data['scaler']
         data_test = self._data['test_data_norm']
-        T = len(data_test)     
+        T = len(data_test)
+        K = data_test.shape[1]
         bm = utils.binary_matrix(self._verified_percentage, len(data_test), self._nodes)
         l = self._seq_len
         h = self._horizon
-        pd = np.zeros(shape=(T-h, self._nodes), dtype='float32')
+        pd = np.zeros(shape=(T - h, self._nodes), dtype='float32')
         pd[:l] = data_test[:l]
+        _pd = np.zeros(shape=(T - h, self._nodes), dtype='float32')
+        _pd[:l] = data_test[:l]
         predictions, gt = list(), list()
-        for i in range(0, T-l-h, h):
-            input = np.zeros(shape=(self._nodes, l, self._input_dim))
-            # input_dim = 2
-            input[:, :, 0] = pd[i:i+l].T
-            input[:, :, 1] = bm[i:i+l].T
-            yhats = self._predict(input)
-            predictions.append(yhats.copy())
-            gt.append(data_test[i+l:i+l+h])
-            # update y
-            _bm = bm[i+l:i+l+h].copy()
-            _gt = data_test[i+l:i+l+h].copy()
-            pd[i+l:i+l+h] = yhats * (1.0 - _bm) + _gt * _bm
-            
+        for i in tqdm(range(0, T - l - h, h)):
+            for k in range(K):
+                input = np.zeros(shape=(1, l, self._input_dim))
+                # input_dim = 2
+                input[0, :, 0] = pd[i:i + l, k]
+                input[0, :, 1] = bm[i:i + l, k]
+                yhats = self._predict(input)
+                yhats = np.squeeze(yhats, axis=-1)
+                predictions.append(yhats.copy())
+                gt.append(data_test[i + l:i + l + h, k].copy())
+                # update y
+                _bm = bm[i + l:i + l + h, k].copy()
+                _gt = data_test[i + l:i + l + h, k].copy()
+                pd[i + l:i + l + h, k] = yhats * (1.0 - _bm) + _gt * _bm
+                _pd[i + l:i + l + h, k] = yhats
+
         predictions = np.stack(predictions, axis=0)
         gt = np.stack(gt, axis=0)
-        predictions = scaler.inverse_transform(predictions)
-        gt = scaler.inverse_transform(gt)
+        # predictions = scaler.inverse_transform(predictions)
+        # gt = scaler.inverse_transform(gt)
         print(predictions.shape, gt.shape)
 
         # save bm and pd to log dir
         np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
+
+        predicted_data = scaler.inverse_transform(_pd)
+        ground_truth = scaler.inverse_transform(data_test[:_pd.shape[0]])
+        np.save(self._log_dir+'pd', predicted_data)
+        np.save(self._log_dir+'gt', ground_truth)
         # save metrics to log dir
-        error_list = utils.cal_error(gt.flatten(), predictions.flatten())
+        error_list = utils.cal_error(predicted_data.flatten(), ground_truth.flatten())
         utils.save_metrics(error_list, self._log_dir, self._alg_name)
 
     def _predict(self, source):
         states_value = self.encoder_model.predict(source)
         # Generate empty target sequence of length 1.
-        target_seq = np.zeros((self._nodes, 1, self._output_dim))
+        target_seq = np.zeros((1, 1, self._output_dim))
         # Populate the first character of target sequence with the start character.
-        target_seq[:, 0, 0] = source[:, -1, 0]
+        # target_seq[0, 0, 0] = source[0, -1, 0]
 
-        yhat = np.zeros(shape=(self._horizon, self._nodes),
+        yhat = np.zeros(shape=(self._horizon+1, 1),
                         dtype='float32')
-        for i in range(self._horizon):
+        for i in range(self._horizon + 1):
             output_tokens, h, c = self.decoder_model.predict(
                 [target_seq] + states_value)
-            output_tokens = output_tokens[:, -1, 0]
+            output_tokens = output_tokens[0, -1, 0]
             yhat[i] = output_tokens
 
-            target_seq = np.zeros((self._nodes, 1, self._output_dim))
-            target_seq[:, 0, 0] = output_tokens
+            target_seq = np.zeros((1, 1, self._output_dim))
+            target_seq[0, 0, 0] = output_tokens
 
             # Update states
             states_value = [h, c]
-        return yhat
+        return yhat[-self._horizon:]
 
     def load(self):
         self.model.load_weights(self._log_dir + 'best_model.hdf5')
@@ -283,3 +294,16 @@ class EncoderDecoder():
 
     def plot_models(self):
         plot_model(model=self.model, to_file=self._log_dir + '/model.png', show_shapes=True)
+
+
+    def plot_series(self):
+        from matplotlib import pyplot as plt
+        preds = np.load(self._log_dir+'pd.npy')
+        gt = np.load(self._log_dir+'gt.npy')
+
+        for i in range(preds.shape[1]):
+            plt.plot(preds[:, i], label='preds')
+            plt.plot(gt[:, i], label='gt')
+            plt.legend()
+            plt.show()
+            plt.close()

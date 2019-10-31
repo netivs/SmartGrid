@@ -11,14 +11,19 @@ import scipy.sparse as sp
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.sparse import linalg
+from sklearn.preprocessing import MinMaxScaler
+
 
 class StandardScaler:
     """
     Standard the input
     """
-    def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
+
+    def __init__(self, data):
+        self.mean = np.mean(data, axis=0)
+        self.std = np.std(data, axis=0)
+        print(self.mean.shape)
+        
 
     def transform(self, data):
         return (data - self.mean) / self.std
@@ -53,10 +58,11 @@ def prepare_train_valid_test_2d(data, p=0.6):
     valid_size = int(data.shape[0] * 0.2)
 
     train_set = data[0:train_size]
-    valid_set = data[train_size: train_size+valid_size]
-    test_set = data[train_size+valid_size:]
+    valid_set = data[train_size: train_size + valid_size]
+    test_set = data[train_size + valid_size:]
 
     return train_set, valid_set, test_set
+
 
 def new_expand_dims(a, axis):
     # if int is passed, retain the same behaviour
@@ -67,6 +73,7 @@ def new_expand_dims(a, axis):
         a = np.expand_dims(a, ax)
     return a
 
+
 def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, horizon):
     K = data.shape[1]
     T = data.shape[0]
@@ -76,48 +83,45 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
 
     _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
 
-    en_x = np.zeros(shape=((T-seq_len-horizon)*K, seq_len, input_dim))
-    de_x = np.zeros(shape=((T-seq_len-horizon)*K, horizon, output_dim))
-    de_y = np.zeros(shape=((T-seq_len-horizon)*K, horizon, output_dim))
+    en_x = np.zeros(shape=((T - seq_len - horizon) * K, seq_len, input_dim))
+    de_x = np.zeros(shape=((T - seq_len - horizon) * K, horizon + 1, output_dim))
+    de_y = np.zeros(shape=((T - seq_len - horizon) * K, horizon + 1, output_dim))
 
     _idx = 0
     for k in range(K):
-        for i in range(T-seq_len-horizon):
-            en_x[_idx, :, 0] = _data[i:i+seq_len, k]
-            en_x[_idx, :, 1] = bm[i:i+seq_len, k]
-            de_x[_idx, :, 0] = data[i+seq_len-1:i+seq_len+horizon-1, k]
-            de_y[_idx, :, 0] = data[i+seq_len:i+seq_len+horizon, k]
-            _idx +=1
+        for i in range(T - seq_len - horizon):
+            en_x[_idx, :, 0] = _data[i:i + seq_len, k]
+            en_x[_idx, :, 1] = bm[i:i + seq_len, k]
+
+            de_x[_idx, 0, 0] = 0
+            de_x[_idx, 1:, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
+            de_y[_idx, :, 0] = data[i + seq_len-1:i + seq_len + horizon, k]
+
+            _idx += 1
     return en_x, de_x, de_y
+
 
 def create_data_lstm_ed(data, seq_len, r, input_dim, output_dim, horizon):
     K = data.shape[1]
     T = data.shape[0]
     bm = binary_matrix(r, T, K)
-    e_x, d_x, d_y = list(), list(), list()
-    for col in range(K):
-        data_load_area = data[:, col]
-        # x' - standard deviation for the training set
-        x_stdev = np.std(data_load_area)
-        for i in range (T - seq_len - horizon):
-            x_en = data_load_area[i:i+seq_len].copy()
-            x_de = data_load_area[i+seq_len-1:i+seq_len+horizon-1].copy()
-            y_de = data_load_area[i+seq_len:i+seq_len+horizon].copy()
-            for row in range(len(x_en)):
-                if bm[row+i][col] == 0:
-                    tmp = x_en[row]
-                    x_en[row] = random.uniform((tmp - x_stdev), (tmp + x_stdev))
+    _data = data.copy()
+    _std = np.std(data)
 
-            x_en = x_en.reshape(seq_len, input_dim)
-            x_de = x_de.reshape(horizon, input_dim)
-            y_de = y_de.reshape(horizon, input_dim)
-            e_x.append(x_en)
-            d_x.append(x_de)
-            d_y.append(y_de)
-    e_x = np.stack(e_x, axis=0)
-    d_x = np.stack(d_x, axis=0)
-    d_y = np.stack(d_y, axis=0)
-    return e_x, d_x, d_y
+    _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
+
+    en_x = np.zeros(shape=((T - seq_len - horizon) * K, seq_len, input_dim))
+    de_x = np.zeros(shape=((T - seq_len - horizon) * K, horizon, 1))
+    de_y = np.zeros(shape=((T - seq_len - horizon) * K, horizon, 1))
+
+    for k in range(K):
+        for i in range(T - seq_len - horizon):
+            en_x[i] = np.expand_dims(_data[i:i + seq_len, k], axis=2)
+            de_x[i] = np.expand_dims(data[i + seq_len - 1:i + seq_len + horizon - 1, k], axis=2)
+            de_y[i] = np.expand_dims(data[i + seq_len:i + seq_len + horizon, k], axis=2)
+
+    return en_x, de_x, de_y
+
 
 def load_dataset_lstm_ed(seq_len, horizon, input_dim, output_dim, raw_dataset_dir, r, p, **kwargs):
     raw_data = np.load(raw_dataset_dir)['data']
@@ -126,19 +130,33 @@ def load_dataset_lstm_ed(seq_len, horizon, input_dim, output_dim, raw_dataset_di
     train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
     print('|--- Normalizing the train set.')
     data = {}
-    scaler = StandardScaler(mean=train_data2d.mean(), std=train_data2d.std())
+    scaler = MinMaxScaler(copy=True, feature_range=(0, 1))
+    scaler.fit(train_data2d)
     train_data2d_norm = scaler.transform(train_data2d)
     valid_data2d_norm = scaler.transform(valid_data2d)
     test_data2d_norm = scaler.transform(test_data2d)
+    # train_data2d_norm = train_data2d
+    # valid_data2d_norm = valid_data2d
+    # test_data2d_norm = test_data2d
 
-    data['test_data_norm'] = test_data2d_norm
+    data['test_data_norm'] = test_data2d_norm.copy()
 
     encoder_input_train, decoder_input_train, decoder_target_train = create_data_lstm_ed_ver_cuc_xin(train_data2d_norm,
-                                                seq_len=seq_len, r=r, input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+                                                                                                     seq_len=seq_len,
+                                                                                                     r=r,
+                                                                                                     input_dim=input_dim,
+                                                                                                     output_dim=output_dim,
+                                                                                                     horizon=horizon)
     encoder_input_val, decoder_input_val, decoder_target_val = create_data_lstm_ed_ver_cuc_xin(valid_data2d_norm,
-                                                seq_len=seq_len, r=r, input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+                                                                                               seq_len=seq_len, r=r,
+                                                                                               input_dim=input_dim,
+                                                                                               output_dim=output_dim,
+                                                                                               horizon=horizon)
     encoder_input_eval, decoder_input_eval, decoder_target_eval = create_data_lstm_ed_ver_cuc_xin(test_data2d_norm,
-                                                seq_len=seq_len, r=r, input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+                                                                                                  seq_len=seq_len, r=r,
+                                                                                                  input_dim=input_dim,
+                                                                                                  output_dim=output_dim,
+                                                                                                  horizon=horizon)
 
     for cat in ["train", "val", "eval"]:
         e_x, d_x, d_y = locals()["encoder_input_" + cat], locals()[
@@ -193,10 +211,12 @@ def binary_matrix(r, row, col):
     bm = np.random.choice(tf, size=(row, col), p=[r, 1.0 - r])
     return bm
 
+
 def save_metrics(error_list, log_dir, alg):
     with open(log_dir + alg + "_metrics.csv", 'a') as file:
         writer = csv.writer(file)
         writer.writerow(error_list)
+
 
 class DataLoader(object):
     def __init__(self, xs, ys, batch_size, pad_with_last_sample=True, shuffle=False):
@@ -238,6 +258,7 @@ class DataLoader(object):
                 self.current_ind += 1
 
         return _wrapper()
+
 
 def add_simple_summary(writer, names, values, global_step):
     """
@@ -318,6 +339,7 @@ def config_logging(log_dir, log_filename='info.log', level=logging.INFO):
     console_handler.setLevel(level=level)
     logging.basicConfig(handlers=[file_handler, console_handler], level=level)
 
+
 def get_total_trainable_parameter_size():
     """
     Calculates the total number of trainable parameters in the current graph.
@@ -346,7 +368,8 @@ def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
         Y[i] = np.expand_dims(data[i+seq_len-1:i+seq_len+horizon-1], axis=2)
     return X, Y
 
-def create_data_dcrnn(data, seq_len, r, input_dim, output_dim, horizon):
+
+def create_data_dcrnn(data, seq_len, r, input_dim, output, horizon):
     K = data.shape[1]
     T = data.shape[0]
     bm = binary_matrix(r, T, K)
@@ -359,13 +382,13 @@ def create_data_dcrnn(data, seq_len, r, input_dim, output_dim, horizon):
         stdev_mx.append(x_stdev)
 
     # convert to array
-    stdev_mx_arr = np.asarray(stdev_mx).reshape(1,-1)
-    stdev_mx_arr = np.insert(stdev_mx_arr, [0]*(seq_len+horizon-1), stdev_mx_arr[0], axis=0)
-    for i in range (T - seq_len - horizon):
-        x = data[i:i+seq_len, :]
-        y = data[i+seq_len:i+seq_len+horizon, :]
-        _bm = bm[i+seq_len+horizon, :]
-        _tmp_x_y = np.vstack((x,y))
+    stdev_mx_arr = np.asarray(stdev_mx).reshape(1, -1)
+    stdev_mx_arr = np.insert(stdev_mx_arr, [0] * (seq_len + horizon - 1), stdev_mx_arr[0], axis=0)
+    for i in range(T - seq_len - horizon):
+        x = data[i:i + seq_len, :]
+        y = data[i + seq_len:i + seq_len + horizon, :]
+        _bm = bm[i + seq_len + horizon, :]
+        _tmp_x_y = np.vstack((x, y))
         updated_x_y = stdev_mx_arr * (1.0 - _bm) + _tmp_x_y * _bm
         x = updated_x_y[:seq_len, :]
         y = updated_x_y[-horizon:, :]
@@ -377,6 +400,7 @@ def create_data_dcrnn(data, seq_len, r, input_dim, output_dim, horizon):
     X = np.stack(X, axis=0)
     Y = np.stack(Y, axis=0)
     return X, Y
+
 
 def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     batch_size = kwargs['data'].get('batch_size')
