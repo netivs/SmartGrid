@@ -105,10 +105,11 @@ class EncoderDecoder():
             horizon = kwargs['model'].get('horizon')
 
             model_type = kwargs['model'].get('model_type')
+            verified_percentage = kwargs['model'].get('verified_percentage')
 
-            run_id = '%s_%d_%s_%d/' % (
+            run_id = '%s_%d_%s_%d_%g/' % (
                 model_type, horizon,
-                structure, batch_size)
+                structure, batch_size, verified_percentage)
             base_dir = kwargs.get('base_dir')
             log_dir = os.path.join(base_dir, run_id)
         if not os.path.exists(log_dir):
