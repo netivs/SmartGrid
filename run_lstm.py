@@ -38,7 +38,6 @@ def print_lstm_info(mode, config):
     print('|--- RNN_UNITS:\t{}'.format(config['model']['rnn_units']))
     print('|--- NUM_RNN_LAYERS:\t{}'.format(config['model']['num_rnn_layers']))
 
-
     if mode == 'train':
         print('----------------------- TRAIN -----------------------')
         print('|--- DROPOUT:\t{}'.format(config['train']['dropout']))
@@ -69,6 +68,7 @@ def test_lstm_ed(config):
     with tf.device('/device:GPU:{}'.format(config['gpu'])):
         model = EncoderDecoder(is_training=False, **config)
         model.test()
+        model.plot_series()
 
 
 def evaluate_lstm_ed(config):

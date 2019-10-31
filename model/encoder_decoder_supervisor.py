@@ -142,7 +142,7 @@ class EncoderDecoder():
         if is_training:
             return model
         else:
-            self._logger.info("|--- Load model from: {}".format(self._log_dir))
+            self._logger.info("Load model from: {}".format(self._log_dir))
             model.load_weights(self._log_dir + 'best_model.hdf5')
             model.compile(optimizer='adam', loss='mse', metrics=['mse', 'mae'])
 
@@ -201,6 +201,8 @@ class EncoderDecoder():
         h = self._horizon
         pd = np.zeros(shape=(T - h, self._nodes), dtype='float32')
         pd[:l] = data_test[:l]
+        _pd = np.zeros(shape=(T - h, self._nodes), dtype='float32')
+        _pd[:l] = data_test[:l]
         predictions, gt = list(), list()
         for i in tqdm(range(0, T - l - h, h)):
             for k in range(K):
@@ -216,17 +218,23 @@ class EncoderDecoder():
                 _bm = bm[i + l:i + l + h, k].copy()
                 _gt = data_test[i + l:i + l + h, k].copy()
                 pd[i + l:i + l + h, k] = yhats * (1.0 - _bm) + _gt * _bm
+                _pd[i + l:i + l + h, k] = yhats
 
         predictions = np.stack(predictions, axis=0)
         gt = np.stack(gt, axis=0)
-        predictions = scaler.inverse_transform(predictions)
-        gt = scaler.inverse_transform(gt)
+        # predictions = scaler.inverse_transform(predictions)
+        # gt = scaler.inverse_transform(gt)
         print(predictions.shape, gt.shape)
 
         # save bm and pd to log dir
         np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
+
+        predicted_data = scaler.inverse_transform(_pd)
+        ground_truth = scaler.inverse_transform(data_test[:_pd.shape[0]])
+        np.save(self._log_dir+'pd', predicted_data)
+        np.save(self._log_dir+'gt', ground_truth)
         # save metrics to log dir
-        error_list = utils.cal_error(gt.flatten(), predictions.flatten())
+        error_list = utils.cal_error(predicted_data.flatten(), ground_truth.flatten())
         utils.save_metrics(error_list, self._log_dir, self._alg_name)
 
     def _predict(self, source):
@@ -285,3 +293,16 @@ class EncoderDecoder():
 
     def plot_models(self):
         plot_model(model=self.model, to_file=self._log_dir + '/model.png', show_shapes=True)
+
+
+    def plot_series(self):
+        from matplotlib import pyplot as plt
+        preds = np.load(self._log_dir+'pd.npy')
+        gt = np.load(self._log_dir+'gt.npy')
+
+        for i in range(preds.shape[1]):
+            plt.plot(preds[:, i], label='preds')
+            plt.plot(gt[:, i], label='gt')
+            plt.legend()
+            plt.show()
+            plt.close()

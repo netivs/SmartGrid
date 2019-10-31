@@ -11,6 +11,7 @@ import scipy.sparse as sp
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.sparse import linalg
+from sklearn.preprocessing import MinMaxScaler
 
 
 class StandardScaler:
@@ -18,9 +19,11 @@ class StandardScaler:
     Standard the input
     """
 
-    def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
+    def __init__(self, data):
+        self.mean = np.mean(data, axis=0)
+        self.std = np.std(data, axis=0)
+        print(self.mean.shape)
+        
 
     def transform(self, data):
         return (data - self.mean) / self.std
@@ -92,9 +95,7 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
 
             de_x[_idx, 0, 0] = 0
             de_x[_idx, 1:, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
-
-            de_y[_idx, 0, 0] = data[i + seq_len - 1, k]
-            de_y[_idx, 1:, 0] = data[i + seq_len:i + seq_len + horizon, k]
+            de_y[_idx, :, 0] = data[i + seq_len-1:i + seq_len + horizon, k]
 
             _idx += 1
     return en_x, de_x, de_y
@@ -129,10 +130,14 @@ def load_dataset_lstm_ed(seq_len, horizon, input_dim, output_dim, raw_dataset_di
     train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
     print('|--- Normalizing the train set.')
     data = {}
-    scaler = StandardScaler(mean=train_data2d.mean(), std=train_data2d.std())
+    scaler = MinMaxScaler(copy=True, feature_range=(0, 1))
+    scaler.fit(train_data2d)
     train_data2d_norm = scaler.transform(train_data2d)
     valid_data2d_norm = scaler.transform(valid_data2d)
     test_data2d_norm = scaler.transform(test_data2d)
+    # train_data2d_norm = train_data2d
+    # valid_data2d_norm = valid_data2d
+    # test_data2d_norm = test_data2d
 
     data['test_data_norm'] = test_data2d_norm.copy()
 
