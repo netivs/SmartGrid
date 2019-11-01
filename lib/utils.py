@@ -414,12 +414,13 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
     print('|--- Normalizing the train set.')
     data = {}
-    scaler = StandardScaler(train_data2d)
+    scaler = MinMaxScaler(copy=True, feature_range=(0, 1))
+    scaler.fit(train_data2d)
     train_data2d_norm = scaler.transform(train_data2d)
     valid_data2d_norm = scaler.transform(valid_data2d)
     test_data2d_norm = scaler.transform(test_data2d)
 
-    data['test_data_norm'] = test_data2d_norm
+    data['test_data_norm'] = test_data2d_norm.copy()
 
     x_train, y_train = create_data_dcrnn_ver_2(train_data2d_norm, seq_len=seq_len, r=r, 
                                         input_dim=input_dim, output_dim=output_dim, horizon=horizon)

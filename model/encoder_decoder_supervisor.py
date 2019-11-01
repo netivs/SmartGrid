@@ -204,7 +204,6 @@ class EncoderDecoder():
         pd[:l] = data_test[:l]
         _pd = np.zeros(shape=(T - h, self._nodes), dtype='float32')
         _pd[:l] = data_test[:l]
-        predictions, gt = list(), list()
         for i in tqdm(range(0, T - l - h, h)):
             for k in range(K):
                 input = np.zeros(shape=(1, l, self._input_dim))
@@ -213,19 +212,11 @@ class EncoderDecoder():
                 input[0, :, 1] = bm[i:i + l, k]
                 yhats = self._predict(input)
                 yhats = np.squeeze(yhats, axis=-1)
-                predictions.append(yhats.copy())
-                gt.append(data_test[i + l:i + l + h, k].copy())
+                _pd[i + l:i + l + h, k] = yhats                
                 # update y
                 _bm = bm[i + l:i + l + h, k].copy()
                 _gt = data_test[i + l:i + l + h, k].copy()
                 pd[i + l:i + l + h, k] = yhats * (1.0 - _bm) + _gt * _bm
-                _pd[i + l:i + l + h, k] = yhats
-
-        predictions = np.stack(predictions, axis=0)
-        gt = np.stack(gt, axis=0)
-        # predictions = scaler.inverse_transform(predictions)
-        # gt = scaler.inverse_transform(gt)
-        print(predictions.shape, gt.shape)
 
         # save bm and pd to log dir
         np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
@@ -242,7 +233,7 @@ class EncoderDecoder():
         states_value = self.encoder_model.predict(source)
         # Generate empty target sequence of length 1.
         target_seq = np.zeros((1, 1, self._output_dim))
-        # Populate the first character of target sequence with the start character.
+
         # target_seq[0, 0, 0] = source[0, -1, 0]
 
         yhat = np.zeros(shape=(self._horizon+1, 1),
