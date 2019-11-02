@@ -186,21 +186,22 @@ def load_pickle(pickle_file):
 
 
 def cal_error(test_arr, prediction_arr):
-    # cal mse
-    error_mae = mean_absolute_error(test_arr, prediction_arr)
-    print('MAE: %.3f' % error_mae)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        # cal mse
+        error_mae = mean_absolute_error(test_arr, prediction_arr)
+        print('MAE: %.3f' % error_mae)
 
-    # cal rmse
-    error_mse = mean_squared_error(test_arr, prediction_arr)
-    error_rmse = np.sqrt(error_mse)
-    print('RMSE: %.3f' % error_rmse)
+        # cal rmse
+        error_mse = mean_squared_error(test_arr, prediction_arr)
+        error_rmse = np.sqrt(error_mse)
+        print('RMSE: %.3f' % error_rmse)
 
-    # cal mape
-    y_true, y_pred = np.array(test_arr), np.array(prediction_arr)
-    error_mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
-    print('MAPE: %.3f' % error_mape)
-    error_list = [error_mae, error_rmse, error_mape]
-    return error_list
+        # cal mape
+        y_true, y_pred = np.array(test_arr), np.array(prediction_arr)
+        error_mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+        print('MAPE: %.3f' % error_mape)
+        error_list = [error_mae, error_rmse, error_mape]
+        return error_list
 
 
 def binary_matrix(r, row, col):

@@ -102,13 +102,14 @@ class EncoderDecoder():
             rnn_units = kwargs['model'].get('rnn_units')
             structure = '-'.join(
                 ['%d' % rnn_units for _ in range(num_rnn_layers)])
+            seq_len = kwargs['model'].get('seq_len')
             horizon = kwargs['model'].get('horizon')
 
             model_type = kwargs['model'].get('model_type')
             verified_percentage = kwargs['model'].get('verified_percentage')
 
-            run_id = '%s_%d_%s_%d_%g/' % (
-                model_type, horizon,
+            run_id = '%s_%d_%d_%s_%d_%g/' % (
+                model_type,seq_len, horizon,
                 structure, batch_size, verified_percentage)
             base_dir = kwargs.get('base_dir')
             log_dir = os.path.join(base_dir, run_id)
@@ -204,7 +205,14 @@ class EncoderDecoder():
         pd[:l] = data_test[:l]
         _pd = np.zeros(shape=(T - h, self._nodes), dtype='float32')
         _pd[:l] = data_test[:l]
-        for i in tqdm(range(0, T - l - h, h)):
+        iterator = tqdm(range(0, T - l - h, h))
+        for i in iterator:
+            if i+l+h > T-h:
+                # trimm all zero lines
+                pd = pd[~np.all(pd==0, axis=1)]
+                _pd = _pd[~np.all(_pd==0, axis=1)]
+                iterator.close()
+                break
             for k in range(K):
                 input = np.zeros(shape=(1, l, self._input_dim))
                 # input_dim = 2
@@ -212,21 +220,19 @@ class EncoderDecoder():
                 input[0, :, 1] = bm[i:i + l, k]
                 yhats = self._predict(input)
                 yhats = np.squeeze(yhats, axis=-1)
-                _pd[i + l:i + l + h, k] = yhats                
+                _pd[i + l:i + l + h, k] = yhats
                 # update y
                 _bm = bm[i + l:i + l + h, k].copy()
                 _gt = data_test[i + l:i + l + h, k].copy()
                 pd[i + l:i + l + h, k] = yhats * (1.0 - _bm) + _gt * _bm
-
         # save bm and pd to log dir
         np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
-
         predicted_data = scaler.inverse_transform(_pd)
         ground_truth = scaler.inverse_transform(data_test[:_pd.shape[0]])
         np.save(self._log_dir+'pd', predicted_data)
         np.save(self._log_dir+'gt', ground_truth)
         # save metrics to log dir
-        error_list = utils.cal_error(predicted_data.flatten(), ground_truth.flatten())
+        error_list = utils.cal_error(ground_truth.flatten(), predicted_data.flatten())
         utils.save_metrics(error_list, self._log_dir, self._alg_name)
 
     def _predict(self, source):
