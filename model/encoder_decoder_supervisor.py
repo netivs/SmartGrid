@@ -194,6 +194,10 @@ class EncoderDecoder():
         pass
 
     def test(self):
+        for i in range(self._run_times):
+            self._test()
+
+    def _test(self):
         scaler = self._data['scaler']
         data_test = self._data['test_data_norm']
         T = len(data_test)
