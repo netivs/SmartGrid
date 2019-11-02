@@ -12,6 +12,7 @@ import scipy.sparse as sp
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.sparse import linalg
 from sklearn.preprocessing import MinMaxScaler
+from datetime import datetime
 
 
 class StandardScaler:
@@ -211,6 +212,9 @@ def binary_matrix(r, row, col):
 
 
 def save_metrics(error_list, log_dir, alg):
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    error_list.insert(0, dt_string)
     with open(log_dir + alg + "_metrics.csv", 'a') as file:
         writer = csv.writer(file)
         writer.writerow(error_list)
