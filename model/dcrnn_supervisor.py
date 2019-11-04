@@ -12,7 +12,7 @@ import yaml
 from lib import utils, metrics
 from lib.AMSGrad import AMSGrad
 from lib.metrics import masked_mae_loss
-
+from datetime import datetime
 from model.dcrnn_model import DCRNNModel
 
 
@@ -102,24 +102,25 @@ class DCRNNSupervisor(object):
     def _get_log_dir(kwargs):
         log_dir = kwargs['train'].get('log_dir')
         if log_dir is None:
+            now = datetime.now()
+            dt_string = now.strftime("%d%m%Y%H%M%S")
             batch_size = kwargs['data'].get('batch_size')
             learning_rate = kwargs['train'].get('base_lr')
-            max_diffusion_step = kwargs['model'].get('max_diffusion_step')
-            num_rnn_layers = kwargs['model'].get('num_rnn_layers')
-            rnn_units = kwargs['model'].get('rnn_units')
-            structure = '-'.join(
-                ['%d' % rnn_units for _ in range(num_rnn_layers)])
+            # num_rnn_layers = kwargs['model'].get('num_rnn_layers')
+            # rnn_units = kwargs['model'].get('rnn_units')
+            # structure = '-'.join(
+            #     ['%d' % rnn_units for _ in range(num_rnn_layers)])
+            seq_len = kwargs['model'].get('seq_len')
+            verified_percentage = kwargs['model'].get('verified_percentage')
             horizon = kwargs['model'].get('horizon')
             filter_type = kwargs['model'].get('filter_type')
-            filter_type_abbr = 'L'
             if filter_type == 'random_walk':
                 filter_type_abbr = 'R'
             elif filter_type == 'dual_random_walk':
                 filter_type_abbr = 'DR'
-            run_id = 'dcrnn_%s_%d_h_%d_%s_lr_%g_bs_%d_%s/' % (
-                filter_type_abbr, max_diffusion_step, horizon,
-                structure, learning_rate, batch_size,
-                time.strftime('%m%d%H%M%S'))
+            run_id = '{:d}_{:d}_{:.2f}_{:3f}_{:d}_{}_{}'.format(
+                seq_len, horizon, verified_percentage, learning_rate, batch_size,
+                dt_string, filter_type_abbr)
             base_dir = kwargs.get('base_dir')
             log_dir = os.path.join(base_dir, run_id)
         if not os.path.exists(log_dir):

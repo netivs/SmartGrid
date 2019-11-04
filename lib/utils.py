@@ -12,6 +12,7 @@ import scipy.sparse as sp
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.sparse import linalg
 from sklearn.preprocessing import MinMaxScaler
+from datetime import datetime
 
 
 class StandardScaler:
@@ -135,9 +136,6 @@ def load_dataset_lstm_ed(seq_len, horizon, input_dim, output_dim, raw_dataset_di
     train_data2d_norm = scaler.transform(train_data2d)
     valid_data2d_norm = scaler.transform(valid_data2d)
     test_data2d_norm = scaler.transform(test_data2d)
-    # train_data2d_norm = train_data2d
-    # valid_data2d_norm = valid_data2d
-    # test_data2d_norm = test_data2d
 
     data['test_data_norm'] = test_data2d_norm.copy()
 
@@ -189,21 +187,22 @@ def load_pickle(pickle_file):
 
 
 def cal_error(test_arr, prediction_arr):
-    # cal mse
-    error_mae = mean_absolute_error(test_arr, prediction_arr)
-    print('MAE: %.3f' % error_mae)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        # cal mse
+        error_mae = mean_absolute_error(test_arr, prediction_arr)
+        print('MAE: %.3f' % error_mae)
 
-    # cal rmse
-    error_mse = mean_squared_error(test_arr, prediction_arr)
-    error_rmse = np.sqrt(error_mse)
-    print('RMSE: %.3f' % error_rmse)
+        # cal rmse
+        error_mse = mean_squared_error(test_arr, prediction_arr)
+        error_rmse = np.sqrt(error_mse)
+        print('RMSE: %.3f' % error_rmse)
 
-    # cal mape
-    y_true, y_pred = np.array(test_arr), np.array(prediction_arr)
-    error_mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
-    print('MAPE: %.3f' % error_mape)
-    error_list = [error_mae, error_rmse, error_mape]
-    return error_list
+        # cal mape
+        y_true, y_pred = np.array(test_arr), np.array(prediction_arr)
+        error_mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+        print('MAPE: %.3f' % error_mape)
+        error_list = [error_mae, error_rmse, error_mape]
+        return error_list
 
 
 def binary_matrix(r, row, col):
@@ -213,6 +212,9 @@ def binary_matrix(r, row, col):
 
 
 def save_metrics(error_list, log_dir, alg):
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    error_list.insert(0, dt_string)
     with open(log_dir + alg + "_metrics.csv", 'a') as file:
         writer = csv.writer(file)
         writer.writerow(error_list)
@@ -294,13 +296,14 @@ def calculate_normalized_laplacian(adj):
 
 
 def calculate_random_walk_matrix(adj_mx):
-    adj_mx = sp.coo_matrix(adj_mx)
-    d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -1).flatten()
-    d_inv[np.isinf(d_inv)] = 0.
-    d_mat_inv = sp.diags(d_inv)
-    random_walk_mx = d_mat_inv.dot(adj_mx).tocoo()
-    return random_walk_mx
+    with np.errstate(divide='ignore', invalid='ignore'):
+        adj_mx = sp.coo_matrix(adj_mx)
+        d = np.array(adj_mx.sum(1))
+        d_inv = np.power(d, -1).flatten()
+        d_inv[np.isinf(d_inv)] = 0.
+        d_mat_inv = sp.diags(d_inv)
+        random_walk_mx = d_mat_inv.dot(adj_mx).tocoo()
+        return random_walk_mx
 
 
 def calculate_reverse_random_walk_matrix(adj_mx):
@@ -351,8 +354,25 @@ def get_total_trainable_parameter_size():
         total_parameters += np.product([x.value for x in variable.get_shape()])
     return total_parameters
 
+def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
+    K = data.shape[1]
+    T = data.shape[0]
+    bm = binary_matrix(r, T, K)
+    _data = data.copy()
+    _std = np.std(data)
 
-def create_data_dcrnn(data, seq_len, r, input_dim, horizon):
+    _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
+
+    X = np.zeros(shape=((T-seq_len-horizon), seq_len, K, input_dim))
+    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, output_dim))
+
+    for i in range(T-seq_len-horizon):
+        X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
+        Y[i] = np.expand_dims(data[i+seq_len-1:i+seq_len+horizon-1], axis=2)
+    return X, Y
+
+
+def create_data_dcrnn(data, seq_len, r, input_dim, output_dim, horizon):
     K = data.shape[1]
     T = data.shape[0]
     bm = binary_matrix(r, T, K)
@@ -377,7 +397,7 @@ def create_data_dcrnn(data, seq_len, r, input_dim, horizon):
         y = updated_x_y[-horizon:, :]
 
         _x = np.reshape(x, x.shape + (input_dim,))
-        _y = np.reshape(y, y.shape + (input_dim,))
+        _y = np.reshape(y, y.shape + (output_dim,))
         X.append(_x)
         Y.append(_y)
     X = np.stack(X, axis=0)
@@ -389,6 +409,7 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     batch_size = kwargs['data'].get('batch_size')
     raw_dataset_dir = kwargs['data'].get('raw_dataset_dir')
     input_dim = kwargs['model'].get('input_dim')
+    output_dim = kwargs['model'].get('output_dim')
     horizon = kwargs['model'].get('horizon')
     seq_len = kwargs['model'].get('seq_len')
     r = kwargs['model'].get('verified_percentage')
@@ -399,19 +420,20 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
     print('|--- Normalizing the train set.')
     data = {}
-    scaler = StandardScaler(mean=train_data2d.mean(), std=train_data2d.std())
+    scaler = MinMaxScaler(copy=True, feature_range=(0, 1))
+    scaler.fit(train_data2d)
     train_data2d_norm = scaler.transform(train_data2d)
     valid_data2d_norm = scaler.transform(valid_data2d)
     test_data2d_norm = scaler.transform(test_data2d)
 
-    data['test_data_norm'] = test_data2d_norm
+    data['test_data_norm'] = test_data2d_norm.copy()
 
-    x_train, y_train = create_data_dcrnn(train_data2d_norm,
-                                         seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
-    x_val, y_val = create_data_dcrnn(valid_data2d_norm,
-                                     seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
-    x_eval, y_eval = create_data_dcrnn(test_data2d_norm,
-                                       seq_len=seq_len, r=r, input_dim=input_dim, horizon=horizon)
+    x_train, y_train = create_data_dcrnn_ver_2(train_data2d_norm, seq_len=seq_len, r=r, 
+                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+    x_val, y_val = create_data_dcrnn_ver_2(valid_data2d_norm, seq_len=seq_len, r=r, 
+                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+    x_eval, y_eval = create_data_dcrnn_ver_2(test_data2d_norm, seq_len=seq_len, r=r, 
+                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
 
     for cat in ["train", "val", "eval"]:
         _x, _y = locals()["x_" + cat], locals()["y_" + cat]

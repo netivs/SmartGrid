@@ -1,11 +1,14 @@
 import numpy as np
+from datetime import datetime
 
-array = np.array([[1,2,3],[3,4,4]])
+now = datetime.now()
+print("now =", now)
+dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+print("date and time =", dt_string)	
+
+array = np.array([[1,2],[1,3],[1,4],[0,0],[0,0],[0,0]])
 array2 = np.array([[5,6,2],[7,8,1]])
-
-array = np.expand_dims(array, axis=2)
-array2 = np.expand_dims(array2, axis=2)
-array3 = np.concatenate([array,array2], axis=2)
-print(array3.shape)
-print(array3[0].shape)
-print(array3[0])
+# print(r[~np.all(r == 0, axis=1)])
+# array = np.expand_dims(array, axis=2)
+# array2 = np.expand_dims(array2, axis=2)
+# array3 = np.concatenate([array,array2], axis=2)
