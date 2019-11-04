@@ -4,15 +4,15 @@ base_dir: log/lstm_ed
 log_level: INFO
 gpu: 0
 data:
-  batch_size: 1024
+  batch_size: 256
   raw_dataset_dir: data/data_load_area.npz
   eval_batch_size: 1
   test_batch_size: 1
   len_data: 0.6
 model:
   model_type: ed
-  seq_len: 24
-  horizon: 2
+  seq_len: 720
+  horizon: 720
   input_dim: 2
   verified_percentage: 0.8
   l1_decay: 0
