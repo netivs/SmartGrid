@@ -83,6 +83,7 @@ def test_dcrnn(adj_mx, config):
 def evaluate_dcrnn(adj_mx, config):
     # with tf.device('/device:GPU:{}'.format(config['gpu'])):
     dcrnn_supervisor = DCRNNSupervisor(adj_mx=adj_mx, **config)
+    dcrnn_supervisor.load(session, config['train']['model_filename'])
     dcrnn_supervisor.evaluate(sess = session)
 
 
