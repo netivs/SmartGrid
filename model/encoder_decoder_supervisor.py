@@ -194,7 +194,8 @@ class EncoderDecoder():
         pass
 
     def test(self):
-        for i in range(self._run_times):
+        for time in range(self._run_times):
+            print('TIME: ', time+1)
             self._test()
 
     def _test(self):

@@ -14,6 +14,7 @@ from lib.AMSGrad import AMSGrad
 from lib.metrics import masked_mae_loss
 from datetime import datetime
 from model.dcrnn_model import DCRNNModel
+from tqdm import tqdm
 
 
 class DCRNNSupervisor(object):
@@ -27,14 +28,28 @@ class DCRNNSupervisor(object):
         self._data_kwargs = kwargs.get('data')
         self._model_kwargs = kwargs.get('model')
         self._train_kwargs = kwargs.get('train')
-
+        self._test_kwargs = kwargs.get('test')
+        
         # logging.
-        self._alg = self._kwargs.get('alg')
+        self._alg_name = self._kwargs.get('alg')
         self._log_dir = self._get_log_dir(kwargs)
         log_level = self._kwargs.get('log_level', 'INFO')
         self._logger = utils.get_logger(self._log_dir, __name__, 'info.log', level=log_level)
         self._writer = tf.summary.FileWriter(self._log_dir)
         self._logger.info(kwargs)
+
+        # data
+        self._batch_size = self._data_kwargs.get('batch_size')
+
+        # model
+        self._verified_percentage = self._model_kwargs.get('verified_percentage')
+        self._seq_len = self._model_kwargs.get('seq_len')
+        self._horizon = self._model_kwargs.get('horizon')
+        self._input_dim = self._model_kwargs.get('input_dim')
+        self._nodes = self._model_kwargs.get('num_nodes')
+
+        # test
+        self._run_times = self._test_kwargs.get('run_times')
 
         # Data preparation
         # pass here
@@ -50,13 +65,18 @@ class DCRNNSupervisor(object):
                 self._train_model = DCRNNModel(is_training=True, scaler=scaler,
                                                batch_size=self._data_kwargs['batch_size'],
                                                adj_mx=adj_mx, **self._model_kwargs)
-
-        with tf.name_scope('Test'):
+        
+        with tf.name_scope('Evaluate'):
             with tf.variable_scope('DCRNN', reuse=True):
                 self._eval_model = DCRNNModel(is_training=False, scaler=scaler,
                                               batch_size=self._data_kwargs['test_batch_size'],
                                               adj_mx=adj_mx, **self._model_kwargs)
 
+        with tf.name_scope('Test'):
+            with tf.variable_scope('DCRNN', reuse=True):
+                self._test_model = DCRNNModel(is_training=False, scaler=scaler,
+                                              batch_size=self._test_kwargs['batch_size'],
+                                              adj_mx=adj_mx, **self._model_kwargs)
         # Learning rate.
         self._lr = tf.get_variable('learning_rate', shape=(), initializer=tf.constant_initializer(0.01),
                                    trainable=False)
@@ -118,7 +138,7 @@ class DCRNNSupervisor(object):
                 filter_type_abbr = 'R'
             elif filter_type == 'dual_random_walk':
                 filter_type_abbr = 'DR'
-            run_id = '{:d}_{:d}_{:.2f}_{:3f}_{:d}_{}_{}'.format(
+            run_id = '{:d}_{:d}_{:.2f}_{:.3f}_{:d}_{}_{}'.format(
                 seq_len, horizon, verified_percentage, learning_rate, batch_size,
                 dt_string, filter_type_abbr)
             base_dir = kwargs.get('base_dir')
@@ -256,6 +276,59 @@ class DCRNNSupervisor(object):
             sys.stdout.flush()
         return np.min(history)
 
+    def _test(self, sess, **kwargs):
+        fetches = {
+            'outputs': self._test_model.outputs
+        }
+        scaler = self._data['scaler']
+        data_test = self._data['test_data_norm']
+        T = len(data_test)
+        K = self._nodes
+        bm = utils.binary_matrix(self._verified_percentage, len(data_test), K)
+        l = self._seq_len
+        h = self._horizon
+        input = np.zeros(shape=(self._test_kwargs['batch_size'], l, K, self._input_dim))
+        pd = np.zeros(shape=(T - h, K), dtype='float32')
+        pd[:l] = data_test[:l]
+        _pd = np.zeros(shape=(T - h, K), dtype='float32')
+        _pd[:l] = data_test[:l]
+        iterator = tqdm(range(0, T - l - h, h))
+        for i in iterator:
+            if i+l+h > T-h:
+                # trimm all zero lines
+                pd = pd[~np.all(pd==0, axis=1)]
+                _pd = _pd[~np.all(_pd==0, axis=1)]
+                iterator.close()
+                break
+            else:
+                input[0, :, :, 0] = pd[i:i+l]
+                input[:, l, K, 1] = bm[i:i+l]
+                feed_dict = {
+                    self._test_model.inputs: input,
+                }
+                result = sess.run(fetches, feed_dict=feed_dict)
+                yhats = result['outputs'][0, :, :, 0]
+                _pd[i + l:i + l + h] = yhats.copy()
+                # update y
+                _bm = bm[i + l:i + l + h].copy()
+                _gt = data_test[i + l:i + l + h].copy()
+                pd[i + l:i + l + h] = yhats * (1.0 - _bm) + _gt * _bm
+        
+        # save bm and pd to log dir
+        np.savez(self._log_dir + "binary_matrix_and_pd", bm=bm, pd=pd)
+        predicted_data = scaler.inverse_transform(_pd)
+        ground_truth = scaler.inverse_transform(data_test[:_pd.shape[0]])
+        np.save(self._log_dir+'pd', predicted_data)
+        np.save(self._log_dir+'gt', ground_truth)
+        # save metrics to log dir
+        error_list = utils.cal_error(ground_truth.flatten(), predicted_data.flatten())
+        utils.save_metrics(error_list, self._log_dir, self._alg_name)
+
+    def test(self, sess):
+        for time in range(self._run_times):
+            print('TIME: ', time+1)
+            self._test(sess)
+
     def evaluate(self, sess, **kwargs):
         global_step = sess.run(tf.train.get_or_create_global_step())
         eval_results = self.run_epoch_generator(sess, self._eval_model,
@@ -288,7 +361,7 @@ class DCRNNSupervisor(object):
             )
             # save metrics to log
             error_list = [mae, rmse, mape]
-            utils.save_metrics(error_list, self._log_dir, self._alg)
+            utils.save_metrics(error_list, self._log_dir, self._alg_name)
 
             utils.add_simple_summary(self._writer,
                                      ['%s_%d' % (item, horizon_i + 1) for item in
@@ -323,3 +396,15 @@ class DCRNNSupervisor(object):
         with open(os.path.join(self._log_dir, config_filename), 'w') as f:
             yaml.dump(config, f, default_flow_style=False)
         return config['train']['model_filename']
+
+    def plot_series(self):
+        from matplotlib import pyplot as plt
+        preds = np.load(self._log_dir+'pd.npy')
+        gt = np.load(self._log_dir+'gt.npy')
+
+        for i in range(preds.shape[1]):
+            plt.plot(preds[:, i], label='preds')
+            plt.plot(gt[:, i], label='gt')
+            plt.legend()
+            plt.savefig(self._log_dir + '[result_predict]series_{}.png'.format(str(i+1)))
+            plt.close()

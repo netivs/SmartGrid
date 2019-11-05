@@ -13,9 +13,9 @@ data:
   graph_pkl_filename: data/dcrnn/adj_mx.pkl
 
 model:
-  seq_len: 24
-  horizon: 2
-  input_dim: 1
+  seq_len: 168
+  horizon: 24
+  input_dim: 2
   verified_percentage: 0.8
   l1_decay: 0
   num_nodes: 29
@@ -42,6 +42,9 @@ train:
   patience: 50
   steps: [20, 30, 40, 50]
   test_every_n_epochs: 10
+  log_dir: log/dcrnn/24_2_0.80_0.010000_64_03112019105414_DR
+  model_filename: log/dcrnn/24_2_0.80_0.010000_64_03112019105414_DR/models-0.0301-194
 
 test:
-  run_times: 10
+  run_times: 1
+  batch_size: 1

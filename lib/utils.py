@@ -367,7 +367,9 @@ def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
     Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, output_dim))
 
     for i in range(T-seq_len-horizon):
-        X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
+        # X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
+        X[i, :, :, 0] = _data[i:i+seq_len]
+        X[i, :, :, 1] = bm[i:i+seq_len]
         Y[i] = np.expand_dims(data[i+seq_len-1:i+seq_len+horizon-1], axis=2)
     return X, Y
 
@@ -451,3 +453,29 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     data['scaler'] = scaler
 
     return data
+
+def _DataLoader(xs, batch_size, pad_with_last_sample=True):
+    
+    """
+    :param xs:
+    :param batch_size:
+    :param pad_with_last_sample: pad with the last sample to make number of samples divisible to batch_size.
+    """
+    
+    if pad_with_last_sample:
+        num_padding = (batch_size - (len(xs) % batch_size)) % batch_size
+        x_padding = np.repeat(xs[-1:], num_padding, axis=0)
+        _xs = np.concatenate([xs, x_padding], axis=0)
+    size = len(xs)
+    num_batch = int(size // batch_size)
+    xs = _xs
+
+    current_ind = 0
+    def _wrapper():
+        while current_ind < num_batch:
+            start_ind = batch_size * current_ind
+            end_ind = min(size, batch_size * (current_ind + 1))
+            x_i = xs[start_ind: end_ind, ...]
+            yield (x_i)
+            current_ind += 1
+    return _wrapper()
