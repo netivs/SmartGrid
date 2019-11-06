@@ -251,7 +251,7 @@ class DCRNNSupervisor(object):
                                      ['loss/train_loss', 'metric/train_mae', 'loss/val_loss', 'metric/val_mae'],
                                      [train_loss, train_mae, val_loss, val_mae], global_step=global_step)
             end_time = time.time()
-            message = 'Epoch [{}/{}] ({}) train_mae: {:.4f}, val_mae: {:.4f} lr:{:.6f} {:.1f}s'.format(
+            message = 'Epoch [{}/{}] ({}) train_mae: {:.4f}, val_mae: {:.4f} lr:{:.4f} {:.1f}s'.format(
                 self._epoch, epochs, global_step, train_mae, val_mae, new_lr, (end_time - start_time))
             self._logger.info(message)
             if self._epoch % test_every_n_epochs == test_every_n_epochs - 1:
@@ -302,7 +302,7 @@ class DCRNNSupervisor(object):
                 break
             else:
                 input[0, :, :, 0] = pd[i:i+l]
-                # input[0, :, :, 1] = bm[i:i+l]
+                input[0, :, :, 1] = bm[i:i+l]
                 feed_dict = {
                     self._test_model.inputs: input,
                 }

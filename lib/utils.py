@@ -23,7 +23,6 @@ class StandardScaler:
     def __init__(self, data):
         self.mean = np.mean(data, axis=0)
         self.std = np.std(data, axis=0)
-        print(self.mean.shape)
         
 
     def transform(self, data):
@@ -241,8 +240,6 @@ class DataLoader(object):
         self.num_batch = int(self.size // self.batch_size)
         if shuffle:
             permutation = np.random.permutation(self.size)
-            print(xs.shape)
-            print(permutation)
             xs, ys = xs[permutation], ys[permutation]
         self.xs = xs
         self.ys = ys
@@ -364,12 +361,13 @@ def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
     _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
 
     X = np.zeros(shape=((T-seq_len-horizon), seq_len, K, input_dim))
-    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, output_dim))
+    # Y has the shape=((T-seq_len-horizon), horizon, K, input_dim) according to the dcrnn_model
+    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, input_dim))
 
     for i in range(T-seq_len-horizon):
-        X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
-        # X[i, :, :, 0] = _data[i:i+seq_len]
-        # X[i, :, :, 1] = bm[i:i+seq_len]
+        # X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
+        X[i, :, :, 0] = _data[i:i+seq_len]
+        X[i, :, :, 1] = bm[i:i+seq_len]
         Y[i] = np.expand_dims(data[i+seq_len-1:i+seq_len+horizon-1], axis=2)
     return X, Y
 
