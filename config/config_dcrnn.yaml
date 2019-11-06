@@ -15,7 +15,7 @@ data:
 model:
   seq_len: 168
   horizon: 24
-  input_dim: 2
+  input_dim: 1
   verified_percentage: 0.8
   l1_decay: 0
   num_nodes: 29
@@ -31,7 +31,7 @@ train:
   base_lr: 0.01
   dropout: 0
   epoch: 0
-  epochs: 100
+  epochs: 50000
   epsilon: 1.0e-3
   global_step: 0
   lr_decay_ratio: 0.1
@@ -39,11 +39,11 @@ train:
   max_to_keep: 100
   min_learning_rate: 2.0e-06
   optimizer: adam
-  patience: 50
+  patience: 20
   steps: [20, 30, 40, 50]
   test_every_n_epochs: 10
-  log_dir: log/dcrnn/24_2_0.80_0.010000_64_03112019105414_DR
-  model_filename: log/dcrnn/24_2_0.80_0.010000_64_03112019105414_DR/models-0.0301-194
+  # log_dir: log/dcrnn/24_2_0.80_0.010000_64_03112019105414_DR
+  # model_filename: log/dcrnn/24_2_0.80_0.010000_64_03112019105414_DR/models-0.0301-194
 
 test:
   run_times: 1

@@ -57,7 +57,6 @@ def print_lstm_info(mode, config):
 
 
 def train_lstm_ed(config):
-    print('|-- Run model training dgc_lstm.')
     with tf.device('/device:GPU:{}'.format(config['gpu'])):
         model = EncoderDecoder(is_training=True, **config)
         model.plot_models()
@@ -72,9 +71,9 @@ def test_lstm_ed(config):
 
 
 def evaluate_lstm_ed(config):
-    # with tf.device('/device:GPU:{}'.format(config['gpu'])):
-    model = EncoderDecoder(is_training=False, **config)
-    model.evaluate()
+    with tf.device('/device:GPU:{}'.format(config['gpu'])):
+        model = EncoderDecoder(is_training=False, **config)
+        model.evaluate()
 
 
 if __name__ == '__main__':

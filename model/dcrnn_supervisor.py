@@ -302,7 +302,7 @@ class DCRNNSupervisor(object):
                 break
             else:
                 input[0, :, :, 0] = pd[i:i+l]
-                input[:, l, K, 1] = bm[i:i+l]
+                # input[0, :, :, 1] = bm[i:i+l]
                 feed_dict = {
                     self._test_model.inputs: input,
                 }
