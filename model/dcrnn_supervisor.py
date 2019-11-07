@@ -133,13 +133,14 @@ class DCRNNSupervisor(object):
             seq_len = kwargs['model'].get('seq_len')
             verified_percentage = kwargs['model'].get('verified_percentage')
             horizon = kwargs['model'].get('horizon')
+            input_dim = kwargs['model'].get('input_dim')
             filter_type = kwargs['model'].get('filter_type')
             if filter_type == 'random_walk':
                 filter_type_abbr = 'R'
             elif filter_type == 'dual_random_walk':
                 filter_type_abbr = 'DR'
-            run_id = '{:d}_{:d}_{:.2f}_{:.3f}_{:d}_{}_{}'.format(
-                seq_len, horizon, verified_percentage, learning_rate, batch_size,
+            run_id = '{:d}_{:d}_{:d}_{:.2f}_{:.3f}_{:d}_{}_{}'.format(
+                seq_len, horizon, input_dim, verified_percentage, learning_rate, batch_size,
                 dt_string, filter_type_abbr)
             base_dir = kwargs.get('base_dir')
             log_dir = os.path.join(base_dir, run_id)
