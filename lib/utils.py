@@ -23,7 +23,6 @@ class StandardScaler:
     def __init__(self, data):
         self.mean = np.mean(data, axis=0)
         self.std = np.std(data, axis=0)
-        
 
     def transform(self, data):
         return (data - self.mean) / self.std
@@ -95,7 +94,7 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
 
             de_x[_idx, 0, 0] = 0
             de_x[_idx, 1:, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
-            de_y[_idx, :, 0] = data[i + seq_len-1:i + seq_len + horizon, k]
+            de_y[_idx, :, 0] = data[i + seq_len - 1:i + seq_len + horizon, k]
 
             _idx += 1
     return en_x, de_x, de_y
@@ -351,6 +350,7 @@ def get_total_trainable_parameter_size():
         total_parameters += np.product([x.value for x in variable.get_shape()])
     return total_parameters
 
+
 def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
     K = data.shape[1]
     T = data.shape[0]
@@ -360,15 +360,14 @@ def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
 
     _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
 
-    X = np.zeros(shape=((T-seq_len-horizon), seq_len, K, input_dim))
-    # Y has the shape=((T-seq_len-horizon), horizon, K, input_dim) according to the dcrnn_model
-    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, input_dim))
+    X = np.zeros(shape=((T - seq_len - horizon), seq_len, K, input_dim))
+    Y = np.zeros(shape=((T - seq_len - horizon), horizon, K, output_dim))
 
-    for i in range(T-seq_len-horizon):
+    for i in range(T - seq_len - horizon):
         # X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
-        X[i, :, :, 0] = _data[i:i+seq_len]
-        X[i, :, :, 1] = bm[i:i+seq_len]
-        Y[i] = np.expand_dims(data[i+seq_len-1:i+seq_len+horizon-1], axis=2)
+        X[i, :, :, 0] = _data[i:i + seq_len]
+        X[i, :, :, 1] = bm[i:i + seq_len]
+        Y[i, :, :, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1]
     return X, Y
 
 
@@ -428,12 +427,12 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
 
     data['test_data_norm'] = test_data2d_norm.copy()
 
-    x_train, y_train = create_data_dcrnn_ver_2(train_data2d_norm, seq_len=seq_len, r=r, 
-                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
-    x_val, y_val = create_data_dcrnn_ver_2(valid_data2d_norm, seq_len=seq_len, r=r, 
-                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
-    x_eval, y_eval = create_data_dcrnn_ver_2(test_data2d_norm, seq_len=seq_len, r=r, 
-                                        input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+    x_train, y_train = create_data_dcrnn_ver_2(train_data2d_norm, seq_len=seq_len, r=r,
+                                               input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+    x_val, y_val = create_data_dcrnn_ver_2(valid_data2d_norm, seq_len=seq_len, r=r,
+                                           input_dim=input_dim, output_dim=output_dim, horizon=horizon)
+    x_eval, y_eval = create_data_dcrnn_ver_2(test_data2d_norm, seq_len=seq_len, r=r,
+                                             input_dim=input_dim, output_dim=output_dim, horizon=horizon)
 
     for cat in ["train", "val", "eval"]:
         _x, _y = locals()["x_" + cat], locals()["y_" + cat]
