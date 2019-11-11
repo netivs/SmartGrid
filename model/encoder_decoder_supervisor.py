@@ -10,7 +10,7 @@ from keras.layers import LSTM, Dense, Input
 from keras.models import Model
 from keras.utils import plot_model
 from tqdm import tqdm
-
+    
 from lib import utils
 
 

@@ -362,7 +362,7 @@ def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
 
     X = np.zeros(shape=((T-seq_len-horizon), seq_len, K, input_dim))
     # Y has the shape=((T-seq_len-horizon), horizon, K, input_dim) according to the dcrnn_model
-    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, input_dim))
+    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, output_dim))
 
     for i in range(T-seq_len-horizon):
         # X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
