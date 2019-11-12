@@ -42,9 +42,6 @@ train:
   patience: 20
   steps: [20, 30, 40, 50]
   test_every_n_epochs: 10
-  log_dir: log/dcrnn/168_24_0.80_0.010_32_06112019102145_DR
-  model_filename: log/dcrnn/168_24_0.80_0.010_32_06112019102145_DR/models-0.0445-16002
-
 test:
   run_times: 1
   batch_size: 1

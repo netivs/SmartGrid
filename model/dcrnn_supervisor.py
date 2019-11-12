@@ -11,7 +11,7 @@ import yaml
 
 from lib import utils, metrics
 from lib.AMSGrad import AMSGrad
-from lib.metrics import masked_mae_loss
+from lib.metrics import masked_mae_loss, masked_mse_loss
 from datetime import datetime
 from model.dcrnn_model import DCRNNModel
 from tqdm import tqdm
@@ -98,7 +98,8 @@ class DCRNNSupervisor(object):
         labels = self._train_model.labels[..., :output_dim]
 
         null_val = 0.
-        self._loss_fn = masked_mae_loss(scaler, null_val)
+        self._loss_fn = masked_mse_loss(scaler, null_val)
+        self._mae_fn = masked_mae_loss(scaler, null_val)
         self._train_loss = self._loss_fn(preds=preds, labels=labels)
 
         tvars = tf.trainable_variables()
@@ -156,9 +157,10 @@ class DCRNNSupervisor(object):
         preds = model.outputs
         labels = model.labels[..., :output_dim]
         loss = self._loss_fn(preds=preds, labels=labels)
+        mae = self._mae_fn(preds=preds, labels=labels)
         fetches = {
             'loss': loss,
-            'mae': loss,
+            'mae': mae,
             'global_step': tf.train.get_or_create_global_step()
         }
         if training:
