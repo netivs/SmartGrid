@@ -23,9 +23,9 @@ model:
   num_rnn_layers: 2
 train:
   dropout: 0
-  epochs: 5
+  epochs: 50000
   optimizer: adam
   patience: 20
   continue_train: False
 test:
-  run_times: 1
+  run_times: 50

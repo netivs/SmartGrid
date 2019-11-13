@@ -197,6 +197,8 @@ class DALFSupervisor():
         data_test = self._data['test_data_norm']
         T = len(data_test)
         K = data_test.shape[1]
+        wh_mat = np.expand_dims(self._wh_mat, axis = 1)
+        wh_mat = np.repeat(wh_mat, K, axis = 1)
         bm = utils_dalf.binary_matrix(self._verified_percentage, len(data_test), self._nodes)
         l = self._seq_len
         h = self._horizon
