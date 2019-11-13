@@ -97,12 +97,10 @@ class DALFSupervisor():
                 ['%d' % rnn_units for _ in range(num_rnn_layers)])
             seq_len = kwargs['model'].get('seq_len')
             horizon = kwargs['model'].get('horizon')
-
-            model_type = kwargs['model'].get('model_type')
             verified_percentage = kwargs['model'].get('verified_percentage')
 
-            run_id = '%s_%d_%d_%s_%d_%g/' % (
-                model_type,seq_len, horizon,
+            run_id = '%d_%d_%s_%d_%g/' % (
+                seq_len, horizon,
                 structure, batch_size, verified_percentage)
             base_dir = kwargs.get('base_dir')
             log_dir = os.path.join(base_dir, run_id)
@@ -206,12 +204,6 @@ class DALFSupervisor():
         _pd[:l*d] = data_test[:l*d]
         iterator = tqdm(range(0, T - l*d - d, d))
         for i in iterator:
-            # if i+l+h > T-h:
-            #     # trimm all zero lines
-            #     pd = pd[~np.all(pd==0, axis=1)]
-            #     _pd = _pd[~np.all(_pd==0, axis=1)]
-            #     iterator.close()
-            #     break
             for k in range(K):
                 input = np.zeros(shape=(d, l, self._input_dim))
                 for ihour in range(d):

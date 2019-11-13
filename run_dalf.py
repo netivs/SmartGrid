@@ -55,17 +55,17 @@ def print_dalf_info(mode, config):
 
 
 def train_dalf(config):
-    dalf_supervisor = DALFSupervisor(**config)
+    dalf_supervisor = DALFSupervisor(is_training=True, **config)
     dalf_supervisor.train()
 
 
 def test_dalf(config):
-    dalf_supervisor = DALFSupervisor(**config)
+    dalf_supervisor = DALFSupervisor(is_training=False, **config)
     dalf_supervisor.test()
 
 
 def evaluate_dalf(config):
-    dalf_supervisor = DALFSupervisor(**config)
+    dalf_supervisor = DALFSupervisor(is_training=False, **config)
     dalf_supervisor.evaluate()
 
 if __name__ == '__main__':
