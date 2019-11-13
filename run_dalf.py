@@ -56,12 +56,14 @@ def print_dalf_info(mode, config):
 
 def train_dalf(config):
     dalf_supervisor = DALFSupervisor(is_training=True, **config)
+    dalf_supervisor.plot_models()
     dalf_supervisor.train()
 
 
 def test_dalf(config):
     dalf_supervisor = DALFSupervisor(is_training=False, **config)
     dalf_supervisor.test()
+    dalf_supervisor.plot_series()
 
 
 def evaluate_dalf(config):

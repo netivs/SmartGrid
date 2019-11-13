@@ -8,8 +8,10 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 from datetime import datetime
 
 #### D = NUM_HOUR
-def load_dataset(seq_len, horizon, num_hour, input_dim, output_dim, raw_dataset_dir, verified_percentage, p, **kwargs):
+def load_dataset(seq_len, horizon, num_hour, input_dim, output_dim, raw_dataset_dir, verified_percentage, p):
     raw_data = np.load(raw_dataset_dir)['data']
+    wh_mat = np.load(raw_dataset_dir)['weekend_holiday']
+    wh_mat = np.expand_dims(wh_mat, axis=1)
 
     print('|--- Splitting train-test set.')
     train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
@@ -29,21 +31,24 @@ def load_dataset(seq_len, horizon, num_hour, input_dim, output_dim, raw_dataset_
                                                                                 num_hour = num_hour,
                                                                                 input_dim=input_dim,
                                                                                 output_dim=output_dim,
-                                                                                horizon=horizon)
+                                                                                horizon=horizon,
+                                                                                weekend_holiday_matrix = wh_mat)
     encoder_input_val, decoder_input_val, decoder_target_val = create_data(valid_data2d_norm,
                                                                                 seq_len=seq_len, 
                                                                                 verified_percentage=verified_percentage,
                                                                                 num_hour=num_hour,
                                                                                 input_dim=input_dim,
                                                                                 output_dim=output_dim,
-                                                                                horizon=horizon)
+                                                                                horizon=horizon,
+                                                                                weekend_holiday_matrix = wh_mat)
     encoder_input_eval, decoder_input_eval, decoder_target_eval = create_data(test_data2d_norm,
                                                                                 seq_len=seq_len, 
                                                                                 verified_percentage=verified_percentage,
                                                                                 num_hour=num_hour,
                                                                                 input_dim=input_dim,
                                                                                 output_dim=output_dim,
-                                                                                horizon=horizon)
+                                                                                horizon=horizon,
+                                                                                weekend_holiday_matrix = wh_mat)
 
     for cat in ["train", "val", "eval"]:
         e_x, d_x, d_y = locals()["encoder_input_" + cat], locals()[
@@ -66,9 +71,10 @@ def prepare_train_valid_test_2d(data, p=0.6):
 
     return train_set, valid_set, test_set
 
-def create_data(data, seq_len, verified_percentage, num_hour, input_dim, output_dim, horizon):
+def create_data(data, seq_len, verified_percentage, num_hour, input_dim, output_dim, horizon, weekend_holiday_matrix):
     K = data.shape[1]
     T = data.shape[0]
+    wh_mat = np.repeat(weekend_holiday_matrix, K, axis = 1)
     bm = binary_matrix(verified_percentage, T, K)
     _data = data.copy()
     _std = np.std(data)
@@ -84,7 +90,7 @@ def create_data(data, seq_len, verified_percentage, num_hour, input_dim, output_
             # _data[start:stop:step]
             en_x[i, :, 0] = _data[i:(i + seq_len*num_hour):num_hour, k]
             en_x[i, :, 1] = bm[i:(i + seq_len*num_hour):num_hour, k]
-            # en_x[i, :, 2] = 
+            en_x[i, :, 2] = wh_mat[i:(i+seq_len*num_hour):num_hour,k]
 
             de_x[i, 0, 0] = 0
             de_x[i, 1, 0] = data[i + (seq_len-1)*num_hour, k]

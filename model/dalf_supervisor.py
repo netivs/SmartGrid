@@ -54,6 +54,8 @@ class DALFSupervisor():
         self._output_dim = self._model_kwargs.get('output_dim')
         self._nodes = self._model_kwargs.get('num_nodes')
 
+        self._wh_mat = np.load(self._raw_dataset_dir)['weekend_holiday']
+
         # Train's args
         self._drop_out = self._train_kwargs.get('dropout')
         self._epochs = self._train_kwargs.get('epochs')
@@ -97,10 +99,11 @@ class DALFSupervisor():
                 ['%d' % rnn_units for _ in range(num_rnn_layers)])
             seq_len = kwargs['model'].get('seq_len')
             horizon = kwargs['model'].get('horizon')
+            input_dim = kwargs['model'].get('input_dim')
             verified_percentage = kwargs['model'].get('verified_percentage')
 
-            run_id = '%d_%d_%s_%d_%g/' % (
-                seq_len, horizon,
+            run_id = '%d_%d_%d_%s_%d_%g/' % (
+                seq_len, horizon, input_dim,
                 structure, batch_size, verified_percentage)
             base_dir = kwargs.get('base_dir')
             log_dir = os.path.join(base_dir, run_id)
@@ -208,9 +211,10 @@ class DALFSupervisor():
                 input = np.zeros(shape=(d, l, self._input_dim))
                 for ihour in range(d):
                     list_yhats = []
-                    # input_dim = 2
+                    # input_dim = 3
                     input[ihour, :, 0] = pd[i:(i + l*d):d, k]
                     input[ihour, :, 1] = bm[i:(i + l*d):d, k]
+                    input[ihour, :, 2] = self._wh_mat[i:(i+ l*d):d, k]
                     yhats = self._predict(input)
                     yhats = np.squeeze(yhats, axis=-1)
                     list_yhats.append(yhats)
