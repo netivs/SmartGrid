@@ -8,7 +8,6 @@ import sys
 import numpy as np
 import tensorflow as tf
 import scipy.sparse as sp
-
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.sparse import linalg
 from sklearn.preprocessing import MinMaxScaler

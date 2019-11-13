@@ -14,5 +14,13 @@ array2 = np.array([[5,6,2],[7,8,1]])
 # array3 = np.concatenate([array,array2], axis=2)
 List = ['G','E','E','K','S','F', 
         'O','R','G','E','E','K','S'] 
-print("Intial List: ") 
 print(array[0:2,...])
+
+en_x = np.zeros(shape=(10,30,1))
+# print(en_x[1, :, 0].shape)
+
+A = np.arange(4*2).reshape(4,2)
+print(A)
+print(A[0:3:2,:])
+
+
