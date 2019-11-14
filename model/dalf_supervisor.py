@@ -198,8 +198,9 @@ class DALFSupervisor():
         T = len(data_test)
         K = data_test.shape[1]
         wh_mat = np.expand_dims(self._wh_mat, axis = 1)
+        print(wh_mat[wh_mat > 0].sum())
         wh_mat = np.repeat(wh_mat, K, axis = 1)
-        print(wh_mat.shape)
+        
         bm = utils_dalf.binary_matrix(self._verified_percentage, len(data_test), self._nodes)
         l = self._seq_len
         h = self._horizon
@@ -217,13 +218,16 @@ class DALFSupervisor():
                     # input_dim = 3
                     input[ihour, :, 0] = pd[i:(i + l*d):d, k]
                     input[ihour, :, 1] = bm[i:(i + l*d):d, k]
-                    input[ihour, :, 2] = wh_mat[i:(i+ l*d):d, k]
+                    # input[ihour, :, 2] = wh_mat[i:(i+ l*d):d, k]
                     yhats = self._predict(input)
                     yhats = np.squeeze(yhats, axis=-1)
                     list_yhats.append(yhats)
 
                 arr_yhats = np.asarray(list_yhats)
                 _pd[i + (l*d):i + (l+1)*d, k] = arr_yhats
+                print(arr_yhats, data_test[i + l*d:i + (l+1)*d, k])
+                print(_pd[i + (l*d):i + (l+1)*d, k].shape)                
+                print(arr_yhats.shape, data_test[i + l*d:i + (l+1)*d, k].shape)
                 # update y
                 _bm = bm[i + l*d:i + (l+1)*d, k].copy()
                 _gt = data_test[i + l*d:i + (l+1)*d, k].copy()
