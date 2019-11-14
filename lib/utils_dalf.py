@@ -90,7 +90,7 @@ def create_data(data, seq_len, verified_percentage, num_hour, input_dim, output_
             # _data[start:stop:step]
             en_x[i, :, 0] = _data[i:(i + seq_len*num_hour):num_hour, k]
             en_x[i, :, 1] = bm[i:(i + seq_len*num_hour):num_hour, k]
-            # en_x[i, :, 2] = wh_mat[i:(i+seq_len*num_hour):num_hour,k]
+            en_x[i, :, 2] = wh_mat[i:(i+seq_len*num_hour):num_hour,k]
 
             de_x[i, 0, 0] = 0
             de_x[i, 1, 0] = data[i + (seq_len-1)*num_hour, k]
