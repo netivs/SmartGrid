@@ -23,7 +23,7 @@ def print_dalf_info(mode, config):
     print('|--- RAW_DATASET_DIR:\t{}'.format(config['data']['raw_dataset_dir']))
     print('|--- EVAL_BATCH_SIZE:\t{}'.format(config['data']['eval_batch_size']))
     print('|--- TEST_BATCH_SIZE:\t{}'.format(config['data']['test_batch_size']))
-    print('|--- LEN_DATA:\t{}'.format(config['data']['len_data']))
+    print('|--- PERCENT_TEST_DATA:\t{}'.format(config['data']['percent_test_data']))
 
     print('----------------------- MODEL -----------------------')
     print('|--- SEQ_LEN:\t{}'.format(config['model']['seq_len']))
@@ -50,7 +50,7 @@ def print_dalf_info(mode, config):
 
     print('----------------------------------------------------')
     infor_correct = input('Is the information correct? y(Yes)/n(No):')
-    if infor_correct != 'y' and infor_correct != 'yes':
+    if infor_correct != 'y' and infor_correct != 'yes' and infor_correct != 'YES' and infor_correct != 'Y':
         raise RuntimeError('Information is not correct!')
 
 

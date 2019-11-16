@@ -52,9 +52,9 @@ def get_logger(log_dir, name, log_filename='info.log', level=logging.INFO):
 
 
 def prepare_train_valid_test_2d(data, p=0.6):
-    # len(data_load_area) = data.shape[0]
-    train_size = int(data.shape[0] * p)
-    valid_size = int(data.shape[0] * 0.2)
+    p_valid_size = 0.2
+    train_size = int(data.shape[0] * (1-p-p_valid_size))
+    valid_size = int(data.shape[0] * p_valid_size)
 
     train_set = data[0:train_size]
     valid_set = data[train_size: train_size + valid_size]
@@ -90,7 +90,7 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
     for k in range(K):
         for i in range(T - seq_len - horizon):
             en_x[_idx, :, 0] = _data[i:i + seq_len, k]
-            en_x[_idx, :, 1] = bm[i:i + seq_len, k]
+            # en_x[_idx, :, 1] = bm[i:i + seq_len, k]
 
             de_x[_idx, 0, 0] = 0
             de_x[_idx, 1:, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
@@ -124,6 +124,8 @@ def create_data_lstm_ed(data, seq_len, r, input_dim, output_dim, horizon):
 
 def load_dataset_lstm_ed(seq_len, horizon, input_dim, output_dim, raw_dataset_dir, r, p, **kwargs):
     raw_data = np.load(raw_dataset_dir)['data']
+    # reshape in case raw_data is rank 1 array
+    raw_data = np.reshape(raw_data, (raw_data.shape[0], kwargs['model'].get('num_nodes')))
 
     print('|--- Splitting train-test set.')
     train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)

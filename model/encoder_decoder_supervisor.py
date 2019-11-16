@@ -38,7 +38,7 @@ class EncoderDecoder():
 
         # data args
         self._raw_dataset_dir = self._data_kwargs.get('raw_dataset_dir')
-        self._len_data = self._data_kwargs.get('len_data')
+        self._percent_test_data = self._data_kwargs.get('percent_test_data')
 
         # logging.
         self._log_dir = self._get_log_dir(kwargs)
@@ -62,6 +62,7 @@ class EncoderDecoder():
         self._drop_out = self._train_kwargs.get('dropout')
         self._epochs = self._train_kwargs.get('epochs')
         self._batch_size = self._data_kwargs.get('batch_size')
+        self._optimizer = self._train_kwargs.get('optimizer')
 
         # Test's args
         self._run_times = self._test_kwargs.get('run_times')
@@ -71,7 +72,7 @@ class EncoderDecoder():
             self._data = utils.load_dataset_lstm_ed(seq_len=self._seq_len, horizon=self._horizon,
                                                     input_dim=self._input_dim, output_dim=self._output_dim,
                                                     raw_dataset_dir=self._raw_dataset_dir,
-                                                    r=self._verified_percentage, p=self._len_data)
+                                                    r=self._verified_percentage, p=self._percent_test_data, **kwargs)
         else:
             raise RuntimeError("Model must be lstm or encoder_decoder")
 
@@ -146,7 +147,7 @@ class EncoderDecoder():
         else:
             self._logger.info("Load model from: {}".format(self._log_dir))
             model.load_weights(self._log_dir + 'best_model.hdf5')
-            model.compile(optimizer='adam', loss='mse', metrics=['mse', 'mae'])
+            model.compile(optimizer=self._optimizer, loss='mse', metrics=['mse', 'mae'])
 
             # Construct E_D model for predicting
             self.encoder_model = Model(encoder_inputs, encoder_states)
@@ -168,7 +169,7 @@ class EncoderDecoder():
             return model
 
     def train(self):
-        self.model.compile(optimizer='adam', loss='mse', metrics=['mse', 'mae'])
+        self.model.compile(optimizer=self._optimizer, loss='mse', metrics=['mse', 'mae'])
 
         training_history = self.model.fit([self._data['encoder_input_train'], self._data['decoder_input_train']],
                                           self._data['decoder_target_train'],
@@ -222,7 +223,7 @@ class EncoderDecoder():
                 input = np.zeros(shape=(1, l, self._input_dim))
                 # input_dim = 2
                 input[0, :, 0] = pd[i:i + l, k]
-                input[0, :, 1] = bm[i:i + l, k]
+                # input[0, :, 1] = bm[i:i + l, k]
                 yhats = self._predict(input)
                 yhats = np.squeeze(yhats, axis=-1)
                 _pd[i + l:i + l + h, k] = yhats

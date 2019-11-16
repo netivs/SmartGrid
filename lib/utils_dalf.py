@@ -61,13 +61,15 @@ def load_dataset(seq_len, horizon, num_hour, input_dim, output_dim, raw_dataset_
 
     return data
 
-def prepare_train_valid_test_2d(data, p=0.6):
-    train_size = int(data.shape[0] * p)
-    valid_size = int(data.shape[0] * 0.2)
+def prepare_train_valid_test_2d(data, p=0.2):
+    p_valid_size = 0.2
+    train_size = int(data.shape[0] * (1-p-p_valid_size))
+    valid_size = int(data.shape[0] * p_valid_size)
 
     train_set = data[0:train_size]
     valid_set = data[train_size: train_size + valid_size]
     test_set = data[train_size + valid_size:]
+    print(test_set.shape)
 
     return train_set, valid_set, test_set
 
@@ -150,3 +152,4 @@ def save_metrics(error_list, log_dir, alg):
     with open(log_dir + alg + "_metrics.csv", 'a') as file:
         writer = csv.writer(file)
         writer.writerow(error_list)
+

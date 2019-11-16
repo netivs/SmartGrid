@@ -36,7 +36,7 @@ class DALFSupervisor():
 
         # data args
         self._raw_dataset_dir = self._data_kwargs.get('raw_dataset_dir')
-        self._len_data = self._data_kwargs.get('len_data')
+        self._percent_test_data = self._data_kwargs.get('percent_test_data')
 
         # logging.
         self._log_dir = self._get_log_dir(kwargs)
@@ -68,7 +68,7 @@ class DALFSupervisor():
         self._data = utils_dalf.load_dataset(seq_len=self._seq_len, horizon=self._horizon, num_hour = self._num_hour,
                                                 input_dim=self._input_dim, output_dim=self._output_dim,
                                                 raw_dataset_dir=self._raw_dataset_dir,
-                                                verified_percentage=self._verified_percentage, p=self._len_data)
+                                                verified_percentage=self._verified_percentage, p=self._percent_test_data)
 
         self.callbacks_list = []
 

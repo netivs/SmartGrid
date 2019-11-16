@@ -8,7 +8,7 @@ data:
   raw_dataset_dir: data/data_load_area.npz
   eval_batch_size: 1
   test_batch_size: 1
-  len_data: 0.6
+  percent_test_data: 0.2
 model:
   num_hours: 24
   # seq_len unit is day 

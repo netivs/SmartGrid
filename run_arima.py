@@ -39,7 +39,7 @@ def print_arima_info(mode, config):
 
     print('----------------------------------------------------')
     infor_correct = input('Is the information correct? y(Yes)/n(No):')
-    if infor_correct != 'y' and infor_correct != 'yes':
+    if infor_correct != 'y' and infor_correct != 'yes' and infor_correct != 'YES' and infor_correct != 'Y':
         raise RuntimeError('Information is not correct!')
 
 def evaluate_arima(config):
