@@ -414,7 +414,7 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     horizon = kwargs['model'].get('horizon')
     seq_len = kwargs['model'].get('seq_len')
     r = kwargs['model'].get('verified_percentage')
-    p = kwargs['data'].get('len_data')
+    p = kwargs['data'].get('test_size')
     raw_data = np.load(raw_dataset_dir)['data']
 
     print('|--- Splitting train-test set.')
