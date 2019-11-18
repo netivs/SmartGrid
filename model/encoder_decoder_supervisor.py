@@ -38,7 +38,7 @@ class EncoderDecoder():
 
         # data args
         self._raw_dataset_dir = self._data_kwargs.get('raw_dataset_dir')
-        self._percent_test_data = self._data_kwargs.get('percent_test_data')
+        self._test_size = self._data_kwargs.get('test_size')
 
         # logging.
         self._log_dir = self._get_log_dir(kwargs)
@@ -72,7 +72,7 @@ class EncoderDecoder():
             self._data = utils.load_dataset_lstm_ed(seq_len=self._seq_len, horizon=self._horizon,
                                                     input_dim=self._input_dim, output_dim=self._output_dim,
                                                     raw_dataset_dir=self._raw_dataset_dir,
-                                                    r=self._verified_percentage, p=self._percent_test_data, **kwargs)
+                                                    r=self._verified_percentage, p=self._test_size, **kwargs)
         else:
             raise RuntimeError("Model must be lstm or encoder_decoder")
 

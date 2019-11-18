@@ -16,7 +16,7 @@ def print_arima_info(mode, config):
     print('----------------------- DATA -----------------------')
     print('|--- BATCH_SIZE:\t{}'.format(config['data']['batch_size']))
     print('|--- RAW_DATASET_DIR:\t{}'.format(config['data']['raw_dataset_dir']))
-    print('|--- LEN_DATA:\t{}'.format(config['data']['len_data']))
+    print('|--- test_size:\t{}'.format(config['data']['test_size']))
 
     print('----------------------- MODEL -----------------------')
     print('|--- SEQ_LEN:\t{}'.format(config['model']['seq_len']))

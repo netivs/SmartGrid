@@ -3,7 +3,7 @@ base_dir: log/lstm_ed
 data:
   batch_size: 200
   eval_batch_size: 1
-  percent_test_data: 0.2
+  test_size: 0.2
   raw_dataset_dir: data/test_data.npz
   test_batch_size: 1
 gpu: 0

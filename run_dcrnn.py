@@ -7,7 +7,6 @@ from model.dcrnn_supervisor import DCRNNSupervisor
 from lib import utils
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
 
 def print_dcrnn_info(mode, config):
@@ -23,7 +22,7 @@ def print_dcrnn_info(mode, config):
     print('|--- RAW_DATASET_DIR:\t{}'.format(config['data']['raw_dataset_dir']))
     print('|--- EAL_BATCH_SIZE:\t{}'.format(config['data']['val_batch_size']))
     print('|--- TEST_BATCH_SIZE:\t{}'.format(config['data']['test_batch_size']))
-    print('|--- LEN_DATA:\t{}'.format(config['data']['len_data']))
+    print('|--- test_size:\t{}'.format(config['data']['test_size']))
 
     print('----------------------- MODEL -----------------------')
     print('|--- SEQ_LEN:\t{}'.format(config['model']['seq_len']))

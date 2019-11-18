@@ -6,7 +6,6 @@ import yaml
 from model.encoder_decoder_supervisor import EncoderDecoder
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
 
 
@@ -24,7 +23,7 @@ def print_lstm_info(mode, config):
     print('|--- RAW_DATASET_DIR:\t{}'.format(config['data']['raw_dataset_dir']))
     print('|--- EVAL_BATCH_SIZE:\t{}'.format(config['data']['eval_batch_size']))
     print('|--- TEST_BATCH_SIZE:\t{}'.format(config['data']['test_batch_size']))
-    print('|--- PERCENT_TEST_DATA:\t{}'.format(config['data']['percent_test_data']))
+    print('|--- test_size:\t{}'.format(config['data']['test_size']))
 
     print('----------------------- MODEL -----------------------')
     print('|--- MODEL_TYPE:\t{}'.format(config['model']['model_type']))

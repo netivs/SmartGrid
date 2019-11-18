@@ -3,7 +3,7 @@ base_dir: log/dcrnn
 data:
   batch_size: 32
   graph_pkl_filename: data/dcrnn/adj_mx.pkl
-  len_data: 0.6
+  test_size: 0.6
   output_dir: data/dcrnn
   raw_dataset_dir: data/data_load_area.npz
   test_batch_size: 32
