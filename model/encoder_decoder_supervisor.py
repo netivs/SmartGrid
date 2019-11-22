@@ -150,6 +150,7 @@ class EncoderDecoder():
             model.compile(optimizer=self._optimizer, loss='mse', metrics=['mse', 'mae'])
 
             # Construct E_D model for predicting
+            # Load only encoder_model
             self.encoder_model = Model(encoder_inputs, encoder_states)
 
             decoder_state_input_h = Input(shape=(self._rnn_units,))
@@ -171,6 +172,10 @@ class EncoderDecoder():
     def train(self):
         self.model.compile(optimizer=self._optimizer, loss='mse', metrics=['mse', 'mae'])
 
+        # input is encoder_input_train and decoder_input_train
+        # label is decoder_target_train
+        # number of samples of lables should be equals to input
+        # shape of data must fit the input & output of layer (see model.png)
         training_history = self.model.fit([self._data['encoder_input_train'], self._data['decoder_input_train']],
                                           self._data['decoder_target_train'],
                                           batch_size=self._batch_size,
