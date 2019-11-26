@@ -3,9 +3,9 @@ base_dir: log/lstm_ed
 data:
   batch_size: 200
   eval_batch_size: 1
-  test_size: 0.2
-  raw_dataset_dir: data/test_data.npz
+  raw_dataset_dir: data/data.npz
   test_batch_size: 1
+  test_size: 0.2
 gpu: 0
 log_level: INFO
 model:
