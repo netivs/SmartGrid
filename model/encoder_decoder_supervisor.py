@@ -10,8 +10,8 @@ from keras.layers import LSTM, Dense, Input
 from keras.models import Model
 from keras.utils import plot_model
 from tqdm import tqdm
-    
 from lib import utils
+from model.deep_layers_lstm import lstm_enc, lstm_dec
 
 
 class TimeHistory(keras_callbacks.Callback):
@@ -121,25 +121,24 @@ class EncoderDecoder():
     def _model_construction(self, is_training=True):
         # Model
         encoder_inputs = Input(shape=(None, self._input_dim))
-        encoder = LSTM(self._rnn_units, return_state=True)
-        _, state_h, state_c = encoder(encoder_inputs)
-        # We discard `encoder_outputs` and only keep the states.
-        encoder_states = [state_h, state_c]
+        # encoder = LSTM(self._rnn_units, return_state=True)
+        # _, state_h, state_c = encoder(encoder_inputs)
+        _, encoder_states = lstm_enc(encoder_inputs, rnn_unit=self._rnn_units,
+                                                        rnn_depth=self._num_rnn_layers,
+                                                        rnn_dropout=self._drop_out)
+        # encoder_states = [state_h, state_c]
 
-        # Set up the decoder, using `encoder_states` as initial state.
         decoder_inputs = Input(shape=(None, self._output_dim))
-        # We set up our decoder to return full output sequences,
-        # and to return internal states as well. We don't use the
-        # return states in the training model, but we will use them in inference.
-        decoder_lstm = LSTM(self._rnn_units, return_sequences=True, return_state=True)
-        decoder_outputs, _, _ = decoder_lstm(decoder_inputs,
-                                             initial_state=encoder_states)
+        # decoder_lstm = LSTM(self._rnn_units, return_sequences=True, return_state=True)
+        # decoder_outputs, _, _ = decoder_lstm(decoder_inputs,
+        #                                      initial_state=encoder_states)
+        layers, decoder_outputs, _ = lstm_dec(decoder_inputs, rnn_unit=self._rnn_units,
+                                                                     rnn_depth=self._num_rnn_layers,
+                                                                     rnn_dropout=self._drop_out,
+                                                                     init_states=encoder_states)
 
         decoder_dense = Dense(self._output_dim, activation='relu')
         decoder_outputs = decoder_dense(decoder_outputs)
-
-        # Define the model that will turn
-        # `encoder_input_data` & `decoder_input_data` into `decoder_target_data`
         model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
 
         if is_training:
@@ -149,16 +148,20 @@ class EncoderDecoder():
             model.load_weights(self._log_dir + 'best_model.hdf5')
             model.compile(optimizer=self._optimizer, loss='mse', metrics=['mse', 'mae'])
 
-            # Construct E_D model for predicting
-            # Load only encoder_model
+            # Inference encoder_model
             self.encoder_model = Model(encoder_inputs, encoder_states)
 
-            decoder_state_input_h = Input(shape=(self._rnn_units,))
-            decoder_state_input_c = Input(shape=(self._rnn_units,))
-            decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
-            decoder_outputs, state_h, state_c = decoder_lstm(
-                decoder_inputs, initial_state=decoder_states_inputs)
-            decoder_states = [state_h, state_c]
+            # Inference decoder_model
+            decoder_states_inputs = []
+            decoder_states = []
+            decoder_outputs = decoder_inputs
+            for i in range(self._num_rnn_layers):
+                decoder_state_input_h = Input(shape=(self._rnn_units,))
+                decoder_state_input_c = Input(shape=(self._rnn_units,))
+                decoder_states_inputs += [decoder_state_input_h, decoder_state_input_c]
+                d_o, state_h, state_c = layers[i](decoder_outputs, initial_state=decoder_states_inputs[2*i:2*(i+1)])
+                decoder_outputs = d_o
+                decoder_states += [state_h, state_c]
             decoder_outputs = decoder_dense(decoder_outputs)
             self.decoder_model = Model(
                 [decoder_inputs] + decoder_states_inputs,
@@ -246,6 +249,17 @@ class EncoderDecoder():
         error_list = utils.cal_error(ground_truth.flatten(), predicted_data.flatten())
         utils.save_metrics(error_list, self._log_dir, self._alg_name)
 
+    def _predict_2(self, input):
+        target_seq = np.zeros((1, 1, self._output_dim))
+        yhat = np.zeros(shape=(self._horizon, 1),
+                        dtype='float32')
+
+        output_tokens = self.model.predict([input, target_seq])
+        output_tokens = output_tokens[0, -1, 0]
+        yhat[0] = output_tokens
+
+        return yhat
+
     def _predict(self, source):
         states_value = self.encoder_model.predict(source)
         # Generate empty target sequence of length 1.
@@ -256,8 +270,8 @@ class EncoderDecoder():
         yhat = np.zeros(shape=(self._horizon+1, 1),
                         dtype='float32')
         for i in range(self._horizon + 1):
-            output_tokens, h, c = self.decoder_model.predict(
-                [target_seq] + states_value)
+            output = self.decoder_model.predict([target_seq] + states_value)
+            output_tokens = output[0]
             output_tokens = output_tokens[0, -1, 0]
             yhat[i] = output_tokens
 
@@ -265,7 +279,7 @@ class EncoderDecoder():
             target_seq[0, 0, 0] = output_tokens
 
             # Update states
-            states_value = [h, c]
+            states_value = output[1:]
         return yhat[-self._horizon:]
 
     def load(self):

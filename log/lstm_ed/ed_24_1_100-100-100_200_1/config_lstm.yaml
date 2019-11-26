@@ -1,0 +1,30 @@
+alg: lstm_ed
+base_dir: log/lstm_ed
+data:
+  batch_size: 200
+  eval_batch_size: 1
+  raw_dataset_dir: data/data.npz
+  test_batch_size: 1
+  test_size: 0.2
+gpu: 0
+log_level: INFO
+model:
+  horizon: 1
+  input_dim: 1
+  l1_decay: 0
+  model_type: ed
+  num_nodes: 1
+  num_rnn_layers: 3
+  output_dim: 1
+  rnn_units: 100
+  seq_len: 24
+  verified_percentage: 1
+test:
+  run_times: 1
+train:
+  continue_train: false
+  dropout: 0.5
+  epochs: 300
+  log_dir: log/lstm_ed\ed_24_1_100-100-100_200_1/
+  optimizer: adam
+  patience: 20
