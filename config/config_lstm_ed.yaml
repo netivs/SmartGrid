@@ -5,7 +5,7 @@ log_level: INFO
 gpu: 0
 data:
   batch_size: 200
-  raw_dataset_dir: data/data.npz
+  raw_dataset_dir: data/data_load_area.npz
   eval_batch_size: 1
   test_batch_size: 1
   test_size: 0.2
@@ -16,7 +16,7 @@ model:
   input_dim: 1
   verified_percentage: 1
   l1_decay: 0
-  num_nodes: 1
+  num_nodes: 29
   output_dim: 1
   rnn_units: 100
   num_rnn_layers: 3

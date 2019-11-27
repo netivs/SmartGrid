@@ -14,9 +14,8 @@ def lstm_enc(input, rnn_unit, rnn_depth, rnn_dropout):
         lstm_layer = LSTM(rnn_unit, return_sequences=True,
                                    return_state=True, name='LSTM_enc_{}'.format(i+1))
         x_rnn, state_h, state_c = lstm_layer(x)
+        states += [state_h, state_c]        
         x = x_rnn
-        states += [state_h, state_c]
-
     return x, states
 
 
@@ -34,7 +33,6 @@ def lstm_dec(input, rnn_unit, rnn_depth, rnn_dropout, init_states):
                                    return_state=True, name='LSTM_dec_{}'.format(i+1))
         layers_lstm.append(lstm_layer)                                   
         x_rnn, state_h, state_c = lstm_layer(x, initial_state=init_states[2*i:2*(i+1)])
+        states += [state_h, state_c]        
         x = x_rnn
-        states += [state_h, state_c]
-
     return layers_lstm, x, states

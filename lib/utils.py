@@ -83,8 +83,8 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
     _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
 
     en_x = np.zeros(shape=((T - seq_len - horizon) * K, seq_len, input_dim))
-    de_x = np.zeros(shape=((T - seq_len - horizon) * K, horizon + 1, output_dim))
-    de_y = np.zeros(shape=((T - seq_len - horizon) * K, horizon + 1, output_dim))
+    de_x = np.zeros(shape=((T - seq_len - horizon) * K, horizon, output_dim))
+    de_y = np.zeros(shape=((T - seq_len - horizon) * K, horizon, output_dim))
 
     _idx = 0
     for k in range(K):
@@ -92,9 +92,8 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
             en_x[_idx, :, 0] = _data[i:i + seq_len, k]
             # en_x[_idx, :, 1] = bm[i:i + seq_len, k]
 
-            de_x[_idx, 0, 0] = 0
-            de_x[_idx, 1:, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
-            de_y[_idx, :, 0] = data[i + seq_len-1:i + seq_len + horizon, k]
+            de_x[_idx, :, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
+            de_y[_idx, :, 0] = data[i + seq_len:i + seq_len + horizon, k]
 
             _idx += 1
     return en_x, de_x, de_y
