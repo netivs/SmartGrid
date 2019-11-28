@@ -4,7 +4,7 @@ import sys
 import tensorflow as tf
 import yaml
 from model.encoder_decoder_supervisor import EncoderDecoder
-
+import numpy as np
 config = tf.ConfigProto()
 session = tf.Session(config=config)
 
@@ -76,6 +76,7 @@ def evaluate_lstm_ed(config):
 
 
 if __name__ == '__main__':
+    np.random.seed(1)
     sys.path.append(os.getcwd())
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cpu_only', default=False, type=str, help='Whether to run tensorflow on cpu.')

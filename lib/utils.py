@@ -52,7 +52,7 @@ def get_logger(log_dir, name, log_filename='info.log', level=logging.INFO):
 
 def prepare_train_valid_test_2d(data, p=0.6):
     p_valid_size = 0.2
-    train_size = int(data.shape[0] * (1-p-p_valid_size))
+    train_size = int(data.shape[0] * (1 - p - p_valid_size))
     valid_size = int(data.shape[0] * p_valid_size)
 
     train_set = data[0:train_size]
@@ -92,6 +92,7 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
             # en_x[_idx, :, 1] = bm[i:i + seq_len, k]
 
             de_x[_idx, :, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
+            de_x[_idx, 0, 0] = 0
             de_y[_idx, :, 0] = data[i + seq_len:i + seq_len + horizon, k]
 
             _idx += 1
@@ -360,9 +361,9 @@ def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
 
     _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
 
-    X = np.zeros(shape=((T-seq_len-horizon), seq_len, K, input_dim))
+    X = np.zeros(shape=((T - seq_len - horizon), seq_len, K, input_dim))
     # Y has the shape=((T-seq_len-horizon), horizon, K, input_dim) according to the dcrnn_model
-    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, output_dim))
+    Y = np.zeros(shape=((T - seq_len - horizon), horizon, K, output_dim))
 
     for i in range(T - seq_len - horizon):
         # X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
