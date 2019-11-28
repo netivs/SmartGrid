@@ -1,5 +1,5 @@
 ---
-alg: lstm_ed
+alg: lstm_ed_data_load_area
 base_dir: log/lstm_ed
 log_level: INFO
 gpu: 0
@@ -19,7 +19,7 @@ model:
   num_nodes: 29
   output_dim: 1
   rnn_units: 100
-  num_rnn_layers: 3
+  num_rnn_layers: 1
 train:
   dropout: 0.5
   epochs: 300

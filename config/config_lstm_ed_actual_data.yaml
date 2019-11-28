@@ -19,12 +19,12 @@ model:
   num_nodes: 1
   output_dim: 1
   rnn_units: 100
-  num_rnn_layers: 3
+  num_rnn_layers: 1
 train:
   dropout: 0.5
   epochs: 300
   optimizer: adam
-  patience: 20
+  patience: 30
   continue_train: False
 test:
   run_times: 1

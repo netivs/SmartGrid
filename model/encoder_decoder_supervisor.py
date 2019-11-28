@@ -120,6 +120,47 @@ class EncoderDecoder():
 
     def _model_construction(self, is_training=True):
         # Model
+        encoder_inputs = Input(shape=(None, self._input_dim), name='encoder_input')
+        encoder = LSTM(self._rnn_units, return_state=True)
+        _, state_h, state_c = encoder(encoder_inputs)
+
+        encoder_states = [state_h, state_c]
+
+        decoder_inputs = Input(shape=(None, self._output_dim), name='decoder_input')
+        decoder_lstm = LSTM(self._rnn_units, return_sequences=True, return_state=True)
+        decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
+
+        decoder_dense = Dense(self._output_dim, activation='relu')
+        decoder_outputs = decoder_dense(decoder_outputs)
+        model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
+
+        if is_training:
+            return model
+        else:
+            self._logger.info("Load model from: {}".format(self._log_dir))
+            model.load_weights(self._log_dir + 'best_model.hdf5')
+            model.compile(optimizer=self._optimizer, loss='mse')
+
+            # Inference encoder_model
+            self.encoder_model = Model(encoder_inputs, encoder_states)
+
+            # Inference decoder_model
+            decoder_state_input_h = Input(shape=(self._rnn_units,))
+            decoder_state_input_c = Input(shape=(self._rnn_units,))
+            decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+            decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
+            decoder_states = [state_h, state_c]
+            decoder_outputs = decoder_dense(decoder_outputs)
+
+            self.decoder_model = Model([decoder_inputs] + decoder_states_inputs, [decoder_outputs] + decoder_states)
+
+            plot_model(model=self.encoder_model, to_file=self._log_dir + '/encoder.png', show_shapes=True)
+            plot_model(model=self.decoder_model, to_file=self._log_dir + '/decoder.png', show_shapes=True)
+
+            return model
+
+    def _model_construction_layers(self, is_training=True):
+        # Model
         encoder_inputs = Input(shape=(None, self._input_dim))
         # encoder = LSTM(self._rnn_units, return_state=True)
         # _, state_h, state_c = encoder(encoder_inputs)
@@ -171,6 +212,7 @@ class EncoderDecoder():
             plot_model(model=self.decoder_model, to_file=self._log_dir + '/decoder.png', show_shapes=True)
 
             return model
+
 
     def train(self):
         self.model.compile(optimizer=self._optimizer, loss='mse', metrics=['mse', 'mae'])
@@ -267,9 +309,9 @@ class EncoderDecoder():
 
         # target_seq[0, 0, 0] = source[0, -1, 0]
 
-        yhat = np.zeros(shape=(self._horizon+1, 1),
+        yhat = np.zeros(shape=(self._horizon, 1),
                         dtype='float32')
-        for i in range(self._horizon + 1):
+        for i in range(self._horizon):
             output = self.decoder_model.predict([target_seq] + states_value)
             output_tokens = output[0]
             output_tokens = output_tokens[0, -1, 0]
@@ -280,7 +322,7 @@ class EncoderDecoder():
 
             # Update states
             states_value = output[1:]
-        return yhat[-self._horizon:]
+        return yhat
 
     def load(self):
         self.model.load_weights(self._log_dir + 'best_model.hdf5')

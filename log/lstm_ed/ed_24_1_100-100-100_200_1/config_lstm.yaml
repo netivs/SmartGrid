@@ -1,9 +1,9 @@
-alg: lstm_ed
+alg: lstm_ed_actual_data
 base_dir: log/lstm_ed
 data:
   batch_size: 200
   eval_batch_size: 1
-  raw_dataset_dir: data/test_data.npz
+  raw_dataset_dir: data/actual_data.npz
   test_batch_size: 1
   test_size: 0.2
 gpu: 0
@@ -25,6 +25,6 @@ train:
   continue_train: false
   dropout: 0.5
   epochs: 300
-  log_dir: log/lstm_ed\ed_24_1_100-100-100_200_1/
+  log_dir: log/lstm_ed/ed_24_1_100-100-100_200_1/
   optimizer: adam
   patience: 20
