@@ -8,7 +8,6 @@ import sys
 import numpy as np
 import tensorflow as tf
 import scipy.sparse as sp
-
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from scipy.sparse import linalg
 from sklearn.preprocessing import MinMaxScaler
@@ -52,9 +51,9 @@ def get_logger(log_dir, name, log_filename='info.log', level=logging.INFO):
 
 
 def prepare_train_valid_test_2d(data, p=0.6):
-    # len(data_load_area) = data.shape[0]
-    train_size = int(data.shape[0] * p)
-    valid_size = int(data.shape[0] * 0.2)
+    p_valid_size = 0.2
+    train_size = int(data.shape[0] * (1-p-p_valid_size))
+    valid_size = int(data.shape[0] * p_valid_size)
 
     train_set = data[0:train_size]
     valid_set = data[train_size: train_size + valid_size]
@@ -83,18 +82,23 @@ def create_data_lstm_ed_ver_cuc_xin(data, seq_len, r, input_dim, output_dim, hor
     _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
 
     en_x = np.zeros(shape=((T - seq_len - horizon) * K, seq_len, input_dim))
-    de_x = np.zeros(shape=((T - seq_len - horizon) * K, horizon + 1, output_dim))
-    de_y = np.zeros(shape=((T - seq_len - horizon) * K, horizon + 1, output_dim))
+    de_x = np.zeros(shape=((T - seq_len - horizon) * K, horizon, output_dim))
+    de_y = np.zeros(shape=((T - seq_len - horizon) * K, horizon, output_dim))
 
     _idx = 0
     for k in range(K):
         for i in range(T - seq_len - horizon):
             en_x[_idx, :, 0] = _data[i:i + seq_len, k]
-            en_x[_idx, :, 1] = bm[i:i + seq_len, k]
+            # en_x[_idx, :, 1] = bm[i:i + seq_len, k]
 
+<<<<<<< HEAD
             de_x[_idx, 0, 0] = 0
             de_x[_idx, 1:, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
             de_y[_idx, :, 0] = data[i + seq_len - 1:i + seq_len + horizon, k]
+=======
+            de_x[_idx, :, 0] = data[i + seq_len - 1:i + seq_len + horizon - 1, k]
+            de_y[_idx, :, 0] = data[i + seq_len:i + seq_len + horizon, k]
+>>>>>>> d29f488d1e4254ea18f29202d189e02a61ee36c8
 
             _idx += 1
     return en_x, de_x, de_y
@@ -124,6 +128,8 @@ def create_data_lstm_ed(data, seq_len, r, input_dim, output_dim, horizon):
 
 def load_dataset_lstm_ed(seq_len, horizon, input_dim, output_dim, raw_dataset_dir, r, p, **kwargs):
     raw_data = np.load(raw_dataset_dir)['data']
+    # reshape in case raw_data is rank 1 array
+    raw_data = np.reshape(raw_data, (raw_data.shape[0], kwargs['model'].get('num_nodes')))
 
     print('|--- Splitting train-test set.')
     train_data2d, valid_data2d, test_data2d = prepare_train_valid_test_2d(data=raw_data, p=p)
@@ -360,8 +366,9 @@ def create_data_dcrnn_ver_2(data, seq_len, r, input_dim, output_dim, horizon):
 
     _data[bm == 0] = np.random.uniform(_data[bm == 0] - _std, _data[bm == 0] + _std)
 
-    X = np.zeros(shape=((T - seq_len - horizon), seq_len, K, input_dim))
-    Y = np.zeros(shape=((T - seq_len - horizon), horizon, K, output_dim))
+    X = np.zeros(shape=((T-seq_len-horizon), seq_len, K, input_dim))
+    # Y has the shape=((T-seq_len-horizon), horizon, K, input_dim) according to the dcrnn_model
+    Y = np.zeros(shape=((T-seq_len-horizon), horizon, K, output_dim))
 
     for i in range(T - seq_len - horizon):
         # X[i] = np.expand_dims(_data[i:i+seq_len], axis=2)
@@ -412,7 +419,7 @@ def load_dataset_dcrnn(test_batch_size=None, **kwargs):
     horizon = kwargs['model'].get('horizon')
     seq_len = kwargs['model'].get('seq_len')
     r = kwargs['model'].get('verified_percentage')
-    p = kwargs['data'].get('len_data')
+    p = kwargs['data'].get('test_size')
     raw_data = np.load(raw_dataset_dir)['data']
 
     print('|--- Splitting train-test set.')

@@ -6,7 +6,6 @@ import yaml
 from model.encoder_decoder_supervisor import EncoderDecoder
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
 
 
@@ -24,7 +23,7 @@ def print_lstm_info(mode, config):
     print('|--- RAW_DATASET_DIR:\t{}'.format(config['data']['raw_dataset_dir']))
     print('|--- EVAL_BATCH_SIZE:\t{}'.format(config['data']['eval_batch_size']))
     print('|--- TEST_BATCH_SIZE:\t{}'.format(config['data']['test_batch_size']))
-    print('|--- LEN_DATA:\t{}'.format(config['data']['len_data']))
+    print('|--- test_size:\t{}'.format(config['data']['test_size']))
 
     print('----------------------- MODEL -----------------------')
     print('|--- MODEL_TYPE:\t{}'.format(config['model']['model_type']))
@@ -52,7 +51,7 @@ def print_lstm_info(mode, config):
 
     print('----------------------------------------------------')
     infor_correct = input('Is the information correct? y(Yes)/n(No):')
-    if infor_correct != 'y' and infor_correct != 'yes':
+    if infor_correct != 'y' and infor_correct != 'yes' and infor_correct != 'YES' and infor_correct != 'Y':
         raise RuntimeError('Information is not correct!')
 
 

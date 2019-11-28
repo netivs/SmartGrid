@@ -9,7 +9,7 @@ data:
   output_dir: data/dcrnn
   test_batch_size: 1
   val_batch_size: 64
-  len_data: 0.6
+  test_size: 0.6
   graph_pkl_filename: data/dcrnn/adj_mx.pkl
 
 model:

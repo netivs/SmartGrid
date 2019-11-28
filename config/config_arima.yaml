@@ -6,7 +6,7 @@ gpu: 0
 data: 
   batch_size: 512
   raw_dataset_dir: data/data_load_area.npz
-  len_data: 0.8
+  test_size: 0.8
 model:
   seq_len: 24
   horizon: 2

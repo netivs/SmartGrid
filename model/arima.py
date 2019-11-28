@@ -16,7 +16,7 @@ class Arima():
         self._alg_name = kwargs.get('alg')
         # data args
         self._raw_dataset_dir = self._data_kwargs.get('raw_dataset_dir')
-        self._len_data = self._data_kwargs.get('len_data')
+        self._test_size = self._data_kwargs.get('test_size')
 
         # logging
         self._log_dir = self._get_log_dir(kwargs)
@@ -40,7 +40,7 @@ class Arima():
     def _get_log_dir(kwargs):
         log_dir = kwargs['test'].get('log_dir')
         if log_dir is None:
-            p = kwargs['data'].get('len_data')
+            p = kwargs['data'].get('test_size')
             l = kwargs['model'].get('seq_len')
             h = kwargs['model'].get('horizon')
             r = kwargs['model'].get('verified_percentage')
@@ -62,7 +62,7 @@ class Arima():
         # run predict for 29 nodes
         for column_load_area in range(self._nodes):
             data = self._data[:, column_load_area]
-            size = int(len(data) * self._len_data)
+            size = int(len(data) * self._test_size)
             train, test = data[0:size], data[size:]
             history = [x for x in train]
             history = history[-l:]
