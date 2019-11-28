@@ -1,6 +1,6 @@
 ---
 alg: lstm_ed
-base_dir: log/lstm_ed
+base_dir: log/lstm_ed/data_load_area
 log_level: INFO
 gpu: 0
 data:
