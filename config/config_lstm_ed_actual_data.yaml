@@ -1,5 +1,5 @@
 ---
-alg: lstm_ed
+alg: lstm_ed_actual_data
 base_dir: log/lstm_ed
 log_level: INFO
 gpu: 0
